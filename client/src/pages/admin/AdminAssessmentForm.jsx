@@ -12,13 +12,13 @@ const AdminAssessmentForm = () => {
     const [formData, setFormData] = useState({
         title: 'AUDIT Assessment',
         description: 'The Alcohol Use Disorders Identification Test (AUDIT) is a 10-item screening tool developed by the World Health Organization (WHO) to assess alcohol consumption, drinking behaviors, and alcohol-related problems.',
-        criteria: '0-7: Low Risk, 8-15: Hazardous Use, 16-19: Harmful Use, 20+: Possible Dependence',
+        criteria: '0-3: Low Risk, 4-6: Hazardous Use, 7-8: Harmful Use, 9-10: Possible Dependence',
         scoringLogic: JSON.stringify({
             "bands": [
-                { "min": 0, "max": 7, "label": "Low Risk", "advice": "Your drinking is within low-risk limits." },
-                { "min": 8, "max": 15, "label": "Hazardous Use", "advice": "Your drinking pattern may be hazardous to your health." },
-                { "min": 16, "max": 19, "label": "Harmful Use", "advice": "Your drinking is harmful. You should cut down or stop." },
-                { "min": 20, "max": 40, "label": "Possible Dependence", "advice": "You may be dependent on alcohol. Please seek professional help." }
+                { "min": 0, "max": 3, "label": "Low Risk", "advice": "Your drinking is within low-risk limits." },
+                { "min": 4, "max": 6, "label": "Hazardous Use", "advice": "Your drinking pattern may be hazardous to your health." },
+                { "min": 7, "max": 8, "label": "Harmful Use", "advice": "Your drinking is harmful. You should cut down or stop." },
+                { "min": 9, "max": 10, "label": "Possible Dependence", "advice": "You may be dependent on alcohol. Please seek professional help." }
             ]
         }, null, 2)
     });
@@ -102,11 +102,12 @@ const AdminAssessmentForm = () => {
     const saveQuestion = () => {
         let questionToSave = { ...currentQuestion };
 
-        // Auto-assign scores for single-choice
+        // Auto-assign scores logic removed to allow manual scoring
         if (questionToSave.type === 'single-choice') {
-            questionToSave.options = questionToSave.options.map((opt, idx) => ({
+            // Ensure scores are numbers
+            questionToSave.options = questionToSave.options.map(opt => ({
                 ...opt,
-                score: idx // Auto-assign score based on index (0, 1, 2...)
+                score: Number(opt.score)
             }));
         }
 
@@ -215,15 +216,27 @@ const AdminAssessmentForm = () => {
                                 {/* Dynamic Options / Settings based on Type */}
                                 {currentQuestion.type === 'single-choice' && (
                                     <div className="bg-gray-50 p-3 rounded border">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Options (Scores auto-assigned: 0, 1, 2...)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Options & Scores</label>
                                         {currentQuestion.options.map((opt, idx) => (
-                                            <div key={idx} className="flex space-x-2 mb-2">
+                                            <div key={idx} className="flex space-x-2 mb-2 items-center">
                                                 <input
                                                     type="text"
                                                     className="flex-grow border rounded p-1 text-sm"
                                                     placeholder="Label"
                                                     value={opt.text}
                                                     onChange={(e) => handleOptionChange(idx, 'text', e.target.value)}
+                                                />
+                                                <input
+                                                    type="number"
+                                                    className="w-20 border rounded p-1 text-sm"
+                                                    placeholder="Score"
+                                                    max="10"
+                                                    value={opt.score}
+                                                    onChange={(e) => {
+                                                        let val = parseInt(e.target.value) || 0;
+                                                        if (val > 10) val = 10;
+                                                        handleOptionChange(idx, 'score', val);
+                                                    }}
                                                 />
                                                 <button onClick={() => removeOption(idx)} className="text-red-500 hover:text-red-700">×</button>
                                             </div>

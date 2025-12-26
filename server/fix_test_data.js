@@ -31,7 +31,11 @@ const fixTest = async () => {
         // 3. Fix Questions
         const fixedQuestions = test.questions.map(q => ({
             ...q,
-            type: q.type || 'single-choice' // Default to single-choice if missing
+            type: q.type || 'single-choice', // Default to single-choice if missing
+            options: q.options ? q.options.map((opt, idx) => ({
+                ...opt,
+                score: opt.score !== undefined ? opt.score : idx // Default score to index if missing
+            })) : []
         }));
 
         // 4. Update Test

@@ -66,11 +66,36 @@ const Assessments = () => {
 
     const calculateResults = () => {
         let totalScore = 0;
-        Object.values(answers).forEach(ans => totalScore += ans.score);
-        setScore(totalScore);
+        let maxPossibleScore = 0;
+
+        testData.questions.forEach((q, index) => {
+            const ans = answers[index];
+            if (ans) {
+                totalScore += ans.score;
+            }
+
+            // Calculate max possible score for normalization
+            if (q.type === 'single-choice') {
+                const maxOptionScore = Math.max(...q.options.map(o => o.score || 0));
+                maxPossibleScore += maxOptionScore;
+            } else if (q.type === 'numeric') {
+                maxPossibleScore += (q.max || 0);
+            }
+        });
+
+        // Normalize score to 0-10 scale
+        let normalizedScore = 0;
+        if (maxPossibleScore > 0) {
+            normalizedScore = (totalScore / maxPossibleScore) * 10;
+        }
+
+        // Round to 1 decimal place
+        normalizedScore = Math.round(normalizedScore * 10) / 10;
+
+        setScore(normalizedScore);
 
         const bands = testData.scoringLogic.bands;
-        const band = bands.find(b => totalScore >= b.min && totalScore <= b.max);
+        const band = bands.find(b => normalizedScore >= b.min && normalizedScore <= b.max);
         setResultBand(band || { label: 'Unknown', advice: 'Please consult a professional.' });
         setView('results');
     };
@@ -231,15 +256,15 @@ const Assessments = () => {
                             <h2 className="text-3xl font-bold text-gray-900 mb-2">Your Result</h2>
 
                             <div className="my-8">
-                                <div className={`inline-block px-6 py-2 rounded-full text-lg font-bold mb-4 ${score < 8 ? 'bg-green-100 text-green-800' :
-                                    score < 16 ? 'bg-yellow-100 text-yellow-800' :
-                                        score < 20 ? 'bg-orange-100 text-orange-800' :
+                                <div className={`inline-block px-6 py-2 rounded-full text-lg font-bold mb-4 ${score < 4 ? 'bg-green-100 text-green-800' :
+                                    score < 7 ? 'bg-yellow-100 text-yellow-800' :
+                                        score < 9 ? 'bg-orange-100 text-orange-800' :
                                             'bg-red-100 text-red-800'
                                     }`}>
                                     {resultBand.label}
                                 </div>
-                                <div className="text-6xl font-extrabold text-gray-900 mb-2">{score}</div>
-                                <p className="text-gray-500">Total Score</p>
+                                <div className="text-6xl font-extrabold text-gray-900 mb-2">{score} <span className="text-2xl text-gray-400">/ 10</span></div>
+                                <p className="text-gray-500">Normalized Score</p>
                             </div>
 
                             <div className="bg-gray-50 rounded-lg p-6 mb-8 text-left">
@@ -248,7 +273,7 @@ const Assessments = () => {
                             </div>
 
                             <div className="flex flex-col items-center space-y-4">
-                                {score >= 16 && (
+                                {score >= 9 && (
                                     <div className="w-full bg-red-50 border-l-4 border-red-500 p-4 mb-4 text-left">
                                         <div className="flex">
                                             <div className="flex-shrink-0">
@@ -273,7 +298,7 @@ const Assessments = () => {
                                         Retake Assessment
                                     </button>
 
-                                    {score >= 16 ? (
+                                    {score >= 9 ? (
                                         <div className="flex space-x-4">
                                             <a
                                                 href="/meetings"

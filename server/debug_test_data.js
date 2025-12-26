@@ -51,6 +51,9 @@ const debugTest = async () => {
             if (test.questions && test.questions.length > 0) {
                 console.log('First Question Type:', test.questions[0].type);
                 console.log('First Question Options:', JSON.stringify(test.questions[0].options, null, 2));
+                if (test.questions[0].options && test.questions[0].options.length > 0) {
+                    console.log('First Option Score:', test.questions[0].options[0].score);
+                }
             }
             if (test.questions && test.questions.length > 1) {
                 console.log('Second Question Type:', test.questions[1].type);
