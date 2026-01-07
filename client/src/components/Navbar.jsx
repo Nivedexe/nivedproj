@@ -47,9 +47,9 @@ const Navbar = () => {
                   className="flex items-center space-x-2 text-gray-700 hover:text-primary focus:outline-none"
                 >
                   <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-primary font-bold">
-                    {user.username[0].toUpperCase()}
+                    {user.username?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
                   </div>
-                  <span>{user.username}</span>
+                  <span>{user.username || user.email || 'User'}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
