@@ -11,6 +11,10 @@ const Meeting = db.define('Meeting', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    groupName: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     description: DataTypes.TEXT,
     dateTime: {
         type: DataTypes.DATE,

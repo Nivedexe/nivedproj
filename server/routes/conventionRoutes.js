@@ -1,17 +1,20 @@
 import express from 'express';
-import { createConvention, getConventions, updateConvention, deleteConvention, getConventionById, registerForConvention } from '../controllers/conventionController.js';
-import { protect, admin } from '../middleware/authMiddleware.js';
+import { createConvention, getConventions, updateConvention, deleteConvention, getConventionById, registerForConvention, getAllRegistrations } from '../controllers/conventionController.js';
+import { protect, staff } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+router.route('/registrations')
+    .get(protect, staff, getAllRegistrations);
+
 router.route('/')
     .get(protect, getConventions)
-    .post(protect, admin, createConvention);
+    .post(protect, staff, createConvention);
 
 router.route('/:id')
-    .get(protect, admin, getConventionById)
-    .put(protect, admin, updateConvention)
-    .delete(protect, admin, deleteConvention);
+    .get(protect, staff, getConventionById)
+    .put(protect, staff, updateConvention)
+    .delete(protect, staff, deleteConvention);
 
 router.route('/:id/register')
     .post(protect, registerForConvention);

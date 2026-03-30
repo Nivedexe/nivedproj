@@ -4,9 +4,41 @@ import { User } from '../models/index.js';
 export const getAllUsers = async (req, res) => {
     try {
         const users = await User.findAll({
-            attributes: ['id', 'username', 'email', 'role']
+            attributes: ['id', 'username', 'email', 'role', 'groupName', 'isApproved']
         });
         res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+export const getUsersByGroup = async (req, res) => {
+    try {
+        const { groupName } = req.params;
+        const users = await User.findAll({
+            where: { groupName, role: 'tippler' },
+            attributes: ['id', 'username', 'email', 'isApproved', 'phone', 'sobrietyDate']
+        });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+export const updateUserGroup = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { groupName } = req.body;
+
+        const user = await User.findByPk(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.groupName = groupName;
+        await user.save();
+
+        res.json({ message: 'User group updated successfully', user: { id: user.id, username: user.username, groupName: user.groupName } });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

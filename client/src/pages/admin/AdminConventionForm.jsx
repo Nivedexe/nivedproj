@@ -15,7 +15,12 @@ const AdminConventionForm = () => {
         endDate: '',
         description: '',
         tariff: '',
-        hotelDetails: '',
+        hotelName: '',
+        roomTariffs: {
+            "Single": "",
+            "Double": "",
+            "Suite": ""
+        },
         maxCapacity: 100
     });
     const [error, setError] = useState('');
@@ -30,14 +35,15 @@ const AdminConventionForm = () => {
                     const convention = res.data;
 
                     setFormData({
-                        name: convention.name,
-                        location: convention.location,
-                        startDate: convention.startDate,
-                        endDate: convention.endDate,
-                        description: convention.description,
-                        tariff: convention.tariff,
-                        hotelDetails: convention.hotelDetails,
-                        maxCapacity: convention.maxCapacity
+                        name: convention.name || '',
+                        location: convention.location || '',
+                        startDate: convention.startDate || '',
+                        endDate: convention.endDate || '',
+                        description: convention.description || '',
+                        tariff: convention.tariff || '',
+                        hotelName: convention.hotelName || '',
+                        roomTariffs: convention.roomTariffs || { "Single": "", "Double": "", "Suite": "" },
+                        maxCapacity: convention.maxCapacity || 100
                     });
                 } catch (err) {
                     setError('Failed to fetch convention details');
@@ -51,16 +57,36 @@ const AdminConventionForm = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleRoomTariffChange = (e, roomType) => {
+        setFormData({
+            ...formData,
+            roomTariffs: {
+                ...formData.roomTariffs,
+                [roomType]: e.target.value
+            }
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
             const config = { headers: { Authorization: `Bearer ${token}` } };
 
+            // Clean up empty tariffs before sending
+            const cleanedTariffs = {};
+            for (const [type, price] of Object.entries(formData.roomTariffs)) {
+                if (price !== null && price !== "") {
+                    cleanedTariffs[type] = Number(price);
+                }
+            }
+
+            const payload = { ...formData, roomTariffs: cleanedTariffs };
+
             if (isEditMode) {
-                await axios.put(`http://localhost:5000/api/conventions/${id}`, formData, config);
+                await axios.put(`http://localhost:5000/api/conventions/${id}`, payload, config);
             } else {
-                await axios.post('http://localhost:5000/api/conventions', formData, config);
+                await axios.post('http://localhost:5000/api/conventions', payload, config);
             }
             navigate('/admin');
         } catch (err) {
@@ -169,22 +195,37 @@ const AdminConventionForm = () => {
                         </div>
                     </div>
 
-                    <div className="mb-6">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="hotelDetails">Hotel Details</label>
-                        <select
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            id="hotelDetails"
-                            name="hotelDetails"
-                            value={formData.hotelDetails}
-                            onChange={handleChange}
-                        >
-                            <option value="">Select a Hotel</option>
-                            <option value="Grand Hyatt - 5 Star Luxury">Grand Hyatt - 5 Star Luxury</option>
-                            <option value="Marriott Suites - Premium Stay">Marriott Suites - Premium Stay</option>
-                            <option value="Hilton Garden Inn - Comfort & Style">Hilton Garden Inn - Comfort & Style</option>
-                            <option value="Holiday Inn Express - Budget Friendly">Holiday Inn Express - Budget Friendly</option>
-                            <option value="Radisson Blu - Business Class">Radisson Blu - Business Class</option>
-                        </select>
+                    <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="hotelName">Hotel Name</label>
+                            <input
+                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                id="hotelName"
+                                name="hotelName"
+                                type="text"
+                                value={formData.hotelName}
+                                onChange={handleChange}
+                                placeholder="e.g. Grand Hyatt"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Room Tariffs (₹ per night)</label>
+                            <div className="space-y-2">
+                                {Object.keys(formData.roomTariffs).map(roomType => (
+                                    <div key={roomType} className="flex items-center space-x-2">
+                                        <span className="text-sm font-medium text-gray-600 w-16">{roomType}:</span>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="shadow appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                            value={formData.roomTariffs[roomType]}
+                                            onChange={(e) => handleRoomTariffChange(e, roomType)}
+                                            placeholder={`Rate for ${roomType}`}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     <div className="flex items-center justify-between">

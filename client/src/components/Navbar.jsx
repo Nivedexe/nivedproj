@@ -30,6 +30,12 @@ const Navbar = () => {
                 {user.role === 'admin' && (
                   <Link to="/admin" className="text-gray-600 hover:text-primary transition-colors font-medium">Admin Dashboard</Link>
                 )}
+                {user.role === 'volunteer' && (
+                  <Link to="/volunteer-dashboard" className="text-gray-600 hover:text-primary transition-colors font-medium">Volunteer Dashboard</Link>
+                )}
+                {user.role === 'tippler' && (
+                  <Link to="/dashboard" className="text-gray-600 hover:text-primary transition-colors font-medium">Dashboard</Link>
+                )}
               </>
             )}
 

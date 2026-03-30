@@ -1,8 +1,8 @@
-import { Convention } from '../models/index.js';
+import { Convention, ConventionRegistration, User } from '../models/index.js';
 
 export const createConvention = async (req, res) => {
     try {
-        const { name, location, startDate, endDate, description, tariff, hotelDetails, maxCapacity } = req.body;
+        const { name, location, startDate, endDate, description, tariff, hotelName, roomTariffs, maxCapacity } = req.body;
 
         const convention = await Convention.create({
             name,
@@ -11,7 +11,8 @@ export const createConvention = async (req, res) => {
             endDate,
             description,
             tariff,
-            hotelDetails,
+            hotelName,
+            roomTariffs,
             maxCapacity: maxCapacity || 100
         });
 
@@ -48,7 +49,7 @@ export const getConventionById = async (req, res) => {
 export const updateConvention = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, location, startDate, endDate, description, tariff, hotelDetails, maxCapacity } = req.body;
+        const { name, location, startDate, endDate, description, tariff, hotelName, roomTariffs, maxCapacity } = req.body;
 
         const convention = await Convention.findByPk(id);
         if (!convention) {
@@ -62,7 +63,8 @@ export const updateConvention = async (req, res) => {
             endDate,
             description,
             tariff,
-            hotelDetails,
+            hotelName,
+            roomTariffs,
             maxCapacity
         });
 
@@ -91,7 +93,7 @@ export const deleteConvention = async (req, res) => {
 export const registerForConvention = async (req, res) => {
     try {
         const { id } = req.params;
-        const { memberCount, foodPreference } = req.body;
+        const { memberCount, foodPreference, roomType, totalAmount } = req.body;
         const userId = req.user.id;
 
         const convention = await Convention.findByPk(id);
@@ -104,15 +106,14 @@ export const registerForConvention = async (req, res) => {
             return res.status(400).json({ message: 'Not enough seats available' });
         }
 
-        const totalAmount = convention.tariff * memberCount;
-
         // Create registration
-        await convention.addUser(userId, {
-            through: {
-                memberCount,
-                foodPreference,
-                totalAmount
-            }
+        const registration = await ConventionRegistration.create({
+            memberCount,
+            foodPreference,
+            roomType,
+            totalAmount,
+            UserId: userId,
+            ConventionId: convention.id
         });
 
         // Update registered count
@@ -123,3 +124,18 @@ export const registerForConvention = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
+export const getAllRegistrations = async (req, res) => {
+    try {
+        const registrations = await ConventionRegistration.findAll({
+            include: [
+                { model: User, attributes: ['id', 'username', 'email'] },
+                { model: Convention, attributes: ['id', 'name', 'startDate'] }
+            ]
+        });
+        res.json(registrations);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+

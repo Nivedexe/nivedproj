@@ -1,8 +1,11 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import { DataTypes } from 'sequelize';
 import db from './config/db.js';
-import { User, Meeting, Convention, Test, Payment } from './models/index.js';
+import { User, Meeting, Convention, Test, Payment, TestResult, Newsletter } from './models/index.js';
 
 import authRoutes from './routes/authRoutes.js';
 import meetingRoutes from './routes/meetingRoutes.js';
@@ -11,8 +14,7 @@ import userRoutes from './routes/userRoutes.js';
 import testRoutes from './routes/testRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
-
-dotenv.config();
+import newsletterRoutes from './routes/newsletterRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,6 +30,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/tests', testRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/newsletters', newsletterRoutes);
 
 app.get('/', (req, res) => {
     res.send('E-REHAB API is running');
@@ -38,9 +41,32 @@ const initDb = async () => {
         await db.authenticate();
         console.log('Database connected...');
         await db.sync();
-        console.log('Database synced...');
+
+        // Manual Schema Repair for missing columns
+        const queryInterface = db.getQueryInterface();
+        const tableMeeting = await queryInterface.describeTable('Meetings');
+        if (!tableMeeting.groupName) {
+            await queryInterface.addColumn('Meetings', 'groupName', { type: DataTypes.STRING, allowNull: true });
+            console.log('Added groupName column to Meetings');
+        }
+
+        const tableConv = await queryInterface.describeTable('Conventions');
+        if (!tableConv.hotelName) {
+            await queryInterface.addColumn('Conventions', 'hotelName', { type: DataTypes.STRING, allowNull: true });
+            console.log('Added hotelName column to Conventions');
+        }
+        if (!tableConv.hotelDetails) {
+            await queryInterface.addColumn('Conventions', 'hotelDetails', { type: DataTypes.TEXT, allowNull: true });
+            console.log('Added hotelDetails column to Conventions');
+        }
+        if (!tableConv.roomTariffs) {
+            await queryInterface.addColumn('Conventions', 'roomTariffs', { type: DataTypes.TEXT, allowNull: true });
+            console.log('Added roomTariffs column to Conventions');
+        }
+
+        console.log('Database synced and schema verified...');
     } catch (err) {
-        console.log('Error connecting to database. Make sure MySQL is running and .env is configured.');
+        console.log('Error connecting to database or syncing schema.');
         console.log(err.message);
     }
 };

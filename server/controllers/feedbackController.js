@@ -3,10 +3,10 @@ import { Feedback, User } from '../models/index.js';
 export const createFeedback = async (req, res) => {
     try {
         const { message, rating } = req.body;
-        const userId = req.user.id;
+        const userId = req.user ? req.user.id : null;
 
         const feedback = await Feedback.create({
-            userId,
+            UserId: userId,
             message,
             rating
         });

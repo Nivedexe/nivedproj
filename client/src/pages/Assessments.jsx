@@ -64,7 +64,7 @@ const Assessments = () => {
         }
     };
 
-    const calculateResults = () => {
+    const calculateResults = async () => {
         let totalScore = 0;
         let maxPossibleScore = 0;
 
@@ -94,9 +94,39 @@ const Assessments = () => {
 
         setScore(normalizedScore);
 
-        const bands = testData.scoringLogic.bands;
-        const band = bands.find(b => normalizedScore >= b.min && normalizedScore <= b.max);
-        setResultBand(band || { label: 'Unknown', advice: 'Please consult a professional.' });
+        const logic = testData.scoringLogic || {};
+        let finalBand;
+
+        if (logic.bands) {
+            const band = logic.bands.find(b => normalizedScore >= b.min && normalizedScore <= b.max);
+            finalBand = band || { label: 'Unknown', advice: 'Please consult a professional.' };
+        } else if (logic.thresholds) {
+            const sortedThresholds = [...logic.thresholds].sort((a, b) => a.maxScore - b.maxScore);
+            const thresh = sortedThresholds.find(t => normalizedScore <= t.maxScore) || sortedThresholds[sortedThresholds.length - 1];
+            finalBand = {
+                label: thresh ? thresh.message.split(' (')[0] : 'Unknown',
+                advice: thresh ? thresh.message : 'Please consult a professional.'
+            };
+        } else {
+            finalBand = { label: 'Score Calculated', advice: `Your score is ${normalizedScore}` };
+        }
+        setResultBand(finalBand);
+
+        // Submit to Backend DB
+        try {
+            const token = localStorage.getItem('token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+
+            await axios.post(`http://localhost:5000/api/tests/${testData.id}/submit`, {
+                answers,
+                score: normalizedScore,
+                resultBand: finalBand
+            }, config);
+        } catch (err) {
+            console.error('Failed to submit test results', err);
+            // Even if it fails, we show user their results locally
+        }
+
         setView('results');
     };
 
@@ -267,10 +297,33 @@ const Assessments = () => {
                                 <p className="text-gray-500">Normalized Score</p>
                             </div>
 
-                            <div className="bg-gray-50 rounded-lg p-6 mb-8 text-left">
+                            <div className="bg-gray-50 rounded-lg p-6 mb-8 text-left shadow-sm border border-gray-100">
                                 <h3 className="text-lg font-bold text-gray-900 mb-2">What does this mean?</h3>
-                                <p className="text-gray-700">{resultBand.advice}</p>
+                                <p className="text-gray-700 mb-8 border-b pb-6">{resultBand.advice}</p>
+
+                                <h3 className="text-lg font-bold text-gray-900 mb-12 border-b pb-2">Severity Scale</h3>
+
+                                <div className="relative w-full h-8 rounded-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-600 mb-12 shadow-inner border border-gray-300">
+                                    {/* The marker pointing at the current score */}
+                                    <div
+                                        className="absolute top-[-6px] bottom-[-6px] w-2 bg-gray-900 rounded-full z-10 shadow-lg border-2 border-white"
+                                        style={{ left: `${(score / 10) * 100}%`, transform: 'translateX(-50%)' }}
+                                    ></div>
+
+                                    {/* Score tooltip above the marker */}
+                                    <div
+                                        className="absolute -top-12 px-3 py-1 bg-gray-900 text-white font-bold text-sm rounded z-10 shadow"
+                                        style={{ left: `${(score / 10) * 100}%`, transform: 'translateX(-50%)' }}
+                                    >
+                                        {score.toFixed(1)}
+                                    </div>
+
+                                    {/* Scale labels */}
+                                    <div className="absolute top-12 left-0 text-xs sm:text-sm font-bold text-green-700 uppercase tracking-tight">0 (Low Risk)</div>
+                                    <div className="absolute top-12 right-0 text-xs sm:text-sm font-bold text-red-700 uppercase tracking-tight text-right">10 (Immediate Attention)</div>
+                                </div>
                             </div>
+
 
                             <div className="flex flex-col items-center space-y-4">
                                 {score >= 9 && (

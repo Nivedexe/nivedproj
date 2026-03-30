@@ -11,8 +11,12 @@ const ConventionRegistration = db.define('ConventionRegistration', {
         type: DataTypes.INTEGER,
         defaultValue: 1
     },
+    roomType: {
+        type: DataTypes.STRING,
+        defaultValue: 'Single'
+    },
     foodPreference: {
-        type: DataTypes.ENUM('Veg', 'Non-Veg', 'Vegan'),
+        type: DataTypes.ENUM('Veg', 'Non-Veg', 'Vegan', 'Buffet'),
         defaultValue: 'Veg'
     },
     totalAmount: {

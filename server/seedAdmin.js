@@ -1,22 +1,23 @@
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 import { User } from './models/index.js';
 import db from './config/db.js';
-import dotenv from 'dotenv';
+import fs from 'fs';
 
 dotenv.config();
 
 const seedAdmin = async () => {
     try {
         await db.authenticate();
-        console.log('Database connected...');
+        await db.sync(); // Ensure tables are created
 
-        const email = 'admin@gmail.com';
-        const password = 'pass-admin@123';
-        const username = 'Admin';
+        const email = 'admin@erehab.com';
+        const password = 'adminpassword123';
+        const username = 'admin';
 
-        const existingUser = await User.findOne({ where: { email } });
-        if (existingUser) {
-            console.log('Admin user already exists.');
+        const existingAdmin = await User.findOne({ where: { email } });
+        if (existingAdmin) {
+            fs.writeFileSync('seed_log.txt', 'Admin already exists.');
             process.exit(0);
         }
 
@@ -27,13 +28,14 @@ const seedAdmin = async () => {
             username,
             email,
             password: hashedPassword,
-            role: 'admin'
+            role: 'admin',
+            isApproved: true
         });
 
-        console.log('Admin user created successfully.');
+        fs.writeFileSync('seed_log.txt', 'Admin user created successfully!\nEmail: ' + email + '\nPassword: ' + password);
         process.exit(0);
     } catch (error) {
-        console.error('Error seeding admin:', error);
+        fs.writeFileSync('seed_log.txt', 'Error seeding admin: ' + error.message);
         process.exit(1);
     }
 };

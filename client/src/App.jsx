@@ -119,10 +119,60 @@ const Home = () => (
                     </div>
                 </div>
             </div>
+            
+            {/* Feedback Section */}
+            <div className="bg-indigo-50 py-12 border-t border-gray-200">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h2 className="text-2xl font-extrabold text-gray-900 mb-2">We Value Your Feedback</h2>
+                    <p className="text-gray-600 mb-8">Let us know how we can improve E-REHAB for the community.</p>
+                    <form className="bg-white shadow-lg rounded-xl p-8 text-left border border-gray-100" onSubmit={async (e) => {
+                        e.preventDefault();
+                        const message = e.target.elements.message.value;
+                        const rating = e.target.elements.rating.value;
+                        try {
+                            const token = localStorage.getItem('token');
+                            const headers = { 'Content-Type': 'application/json' };
+                            if (token) headers['Authorization'] = `Bearer ${token}`;
+                            
+                            const response = await fetch('http://localhost:5000/api/feedback', {
+                                method: 'POST',
+                                headers,
+                                body: JSON.stringify({ message, rating: parseInt(rating) })
+                            });
+                            if (response.ok) {
+                                alert('Thank you for your feedback!');
+                                e.target.reset();
+                            } else {
+                                alert('Failed to submit feedback');
+                            }
+                        } catch (err) {
+                            alert('Error submitting feedback');
+                        }
+                    }}>
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-3">Rate your experience (1 is lowest, 5 is highest)</label>
+                            <div className="flex space-x-6">
+                                {[1, 2, 3, 4, 5].map(num => (
+                                    <label key={num} className="flex flex-col items-center space-y-2 cursor-pointer p-2 rounded hover:bg-gray-50 transition-colors">
+                                        <input type="radio" name="rating" value={num} required className="text-primary focus:ring-primary w-5 h-5 border-gray-300" />
+                                        <span className="text-gray-700 font-bold">{num}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Your Message</label>
+                            <textarea name="message" required rows="4" className="w-full border-gray-300 rounded-md focus:ring-primary focus:border-primary p-3 border shadow-sm" placeholder="Tell us about your experience or share any suggestions..."></textarea>
+                        </div>
+                        <button type="submit" className="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md transition-colors shadow text-lg uppercase tracking-wide">Submit Feedback</button>
+                    </form>
+                </div>
+            </div>
+            
         </main>
         <footer className="bg-gray-800 text-white">
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                     <div>
                         <h3 className="text-lg font-semibold mb-4">E-REHAB</h3>
                         <p className="text-gray-400 text-sm">
@@ -136,6 +186,46 @@ const Home = () => (
                             <li><a href="/conventions" className="hover:text-white">Conventions</a></li>
                             <li><a href="/contact" className="hover:text-white">Contact Us</a></li>
                         </ul>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
+                        <p className="text-gray-400 text-sm mb-4">
+                            Subscribe to our newsletter for the latest updates on conventions, meetings, and recovery resources.
+                        </p>
+                        <form className="flex" onSubmit={async (e) => {
+                            e.preventDefault();
+                            const email = e.target.elements.email.value;
+                            try {
+                                const response = await fetch('http://localhost:5000/api/newsletters', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ email })
+                                });
+                                if (response.ok) {
+                                    alert('Subscribed successfully!');
+                                    e.target.reset();
+                                } else {
+                                    const data = await response.json();
+                                    alert(data.message || 'Failed to subscribe');
+                                }
+                            } catch (err) {
+                                alert('Error subscribing to newsletter');
+                            }
+                        }}>
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                placeholder="Enter your email"
+                                className="w-full px-4 py-2 text-gray-900 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                            <button
+                                type="submit"
+                                className="bg-primary hover:bg-indigo-700 px-4 py-2 rounded-r-md font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                            >
+                                Subscribe
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div className="mt-8 border-t border-gray-700 pt-8 text-center text-sm text-gray-400">

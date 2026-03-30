@@ -12,6 +12,10 @@ const User = db.define('User', {
         allowNull: false,
         unique: true
     },
+    groupName: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     email: {
         type: DataTypes.STRING,
         allowNull: false,
