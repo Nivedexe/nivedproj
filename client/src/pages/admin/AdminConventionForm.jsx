@@ -12,20 +12,33 @@ const AdminConventionForm = () => {
 
     const [formData, setFormData] = useState({
         name: '',
-        location: '',
+        location: 'Kochi, Kerala',
         startDate: '',
         endDate: '',
         description: '',
         tariff: '',
         hotelName: '',
+        mapLink: '',
         roomTariffs: {
             "Single": "",
             "Double": "",
             "Suite": ""
         },
-        maxCapacity: 100
+        maxCapacity: 100,
+        coordinatorName: (!isEditMode && user?.role === 'volunteer') ? (user.username || user.name || '').toUpperCase() : '',
+        coordinatorPhone: (!isEditMode && user?.role === 'volunteer') ? (user.phone || '') : ''
     });
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (!isEditMode && user?.role === 'volunteer') {
+            setFormData(prev => ({
+                ...prev,
+                coordinatorName: prev.coordinatorName || (user.username || user.name || '').toUpperCase(),
+                coordinatorPhone: prev.coordinatorPhone || user.phone || ''
+            }));
+        }
+    }, [user, isEditMode]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -38,14 +51,17 @@ const AdminConventionForm = () => {
 
                     setFormData({
                         name: convention.name || '',
-                        location: convention.location || '',
+                        location: convention.location || 'Kochi, Kerala',
                         startDate: convention.startDate || '',
                         endDate: convention.endDate || '',
                         description: convention.description || '',
                         tariff: convention.tariff || '',
                         hotelName: convention.hotelName || '',
+                        mapLink: convention.mapLink || '',
                         roomTariffs: convention.roomTariffs || { "Single": "", "Double": "", "Suite": "" },
-                        maxCapacity: convention.maxCapacity || 100
+                        maxCapacity: convention.maxCapacity || 100,
+                        coordinatorName: convention.coordinatorName || '',
+                        coordinatorPhone: convention.coordinatorPhone || ''
                     });
                 } catch (err) {
                     setError('Failed to fetch convention details');
@@ -138,17 +154,86 @@ const AdminConventionForm = () => {
                         />
                     </div>
 
+                    <div className="mb-5 bg-indigo-50/70 p-4 rounded-lg border border-indigo-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-1">
+                            <label className="block text-gray-900 text-sm font-bold flex items-center">
+                                <span className="mr-1.5 text-base">👤</span> Coordinator Information
+                            </label>
+                            {user?.role === 'volunteer' && (
+                                <span className="text-xs text-indigo-700 bg-indigo-100 font-semibold px-2 py-0.5 rounded-full inline-block">
+                                    Defaulted to your username (CAPITALIZED) & editable
+                                </span>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-gray-700 text-xs font-bold mb-1" htmlFor="coordinatorName">
+                                    Coordinator Name <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white uppercase"
+                                    id="coordinatorName"
+                                    name="coordinatorName"
+                                    type="text"
+                                    required
+                                    placeholder="COORDINATOR NAME"
+                                    value={formData.coordinatorName}
+                                    onChange={handleChange}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Visible to Tipplers and attendees during booking.</p>
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 text-xs font-bold mb-1" htmlFor="coordinatorPhone">
+                                    Coordinator Phone Number <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                                    id="coordinatorPhone"
+                                    name="coordinatorPhone"
+                                    type="tel"
+                                    required
+                                    placeholder="e.g. 9876543210"
+                                    value={formData.coordinatorPhone}
+                                    onChange={handleChange}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Direct contact for attendee questions and coordination.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="location">Location</label>
-                        <input
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="location">
+                            <span className="flex items-center justify-between">
+                                <span>City Location <span className="text-red-500">*</span></span>
+                                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Kochi Active</span>
+                            </span>
+                        </label>
+                        <select
+                            className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                             id="location"
                             name="location"
-                            type="text"
                             required
                             value={formData.location}
                             onChange={handleChange}
-                        />
+                        >
+                            <optgroup label="Active Cities">
+                                <option value="Kochi, Kerala">Kochi, Kerala</option>
+                                <option value="Munnar, Kerala">Munnar, Kerala</option>
+                                <option value="Kovalam, Kerala">Kovalam, Kerala</option>
+                                <option value="Wayanad, Kerala">Wayanad, Kerala</option>
+                            </optgroup>
+                            <optgroup label="Other Popular Cities (Coming Soon)">
+                                <option value="Bengaluru, Karnataka (Coming Soon)" disabled>Bengaluru, Karnataka (Coming Soon)</option>
+                                <option value="Mumbai, Maharashtra (Coming Soon)" disabled>Mumbai, Maharashtra (Coming Soon)</option>
+                                <option value="Delhi-NCR (Coming Soon)" disabled>Delhi-NCR (Coming Soon)</option>
+                                <option value="Chennai, Tamil Nadu (Coming Soon)" disabled>Chennai, Tamil Nadu (Coming Soon)</option>
+                                <option value="Hyderabad, Telangana (Coming Soon)" disabled>Hyderabad, Telangana (Coming Soon)</option>
+                                <option value="Kolkata, West Bengal (Coming Soon)" disabled>Kolkata, West Bengal (Coming Soon)</option>
+                                <option value="Pune, Maharashtra (Coming Soon)" disabled>Pune, Maharashtra (Coming Soon)</option>
+                                <option value="Ahmedabad, Gujarat (Coming Soon)" disabled>Ahmedabad, Gujarat (Coming Soon)</option>
+                            </optgroup>
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">Conventions are mapped to city locations. Specific hotel or venue name is specified below.</p>
                     </div>
 
                     <div className="mb-4 grid grid-cols-2 gap-4">
@@ -219,7 +304,7 @@ const AdminConventionForm = () => {
 
                     <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="hotelName">Hotel Name</label>
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="hotelName">Hotel / Venue Name</label>
                             <input
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 id="hotelName"
@@ -227,11 +312,31 @@ const AdminConventionForm = () => {
                                 type="text"
                                 value={formData.hotelName}
                                 onChange={handleChange}
-                                placeholder="e.g. Grand Hyatt"
+                                placeholder="e.g. Grand Hyatt Kochi Bolgatty"
                             />
                         </div>
                         <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Room Tariffs (₹ per night)</label>
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="mapLink">
+                                <span className="flex items-center">
+                                    <span className="mr-1.5">🗺️</span> Google Maps / Location Link
+                                    <span className="ml-2 text-xs font-normal text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">Optional</span>
+                                </span>
+                            </label>
+                            <input
+                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                id="mapLink"
+                                name="mapLink"
+                                type="url"
+                                value={formData.mapLink || ''}
+                                onChange={handleChange}
+                                placeholder="e.g. https://maps.google.com/?q=Grand+Hyatt+Kochi"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Attendees can open this link to navigate to the venue directly.</p>
+                        </div>
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Room Tariffs (₹ per night)</label>
                             <div className="space-y-2">
                                 {Object.keys(formData.roomTariffs).map(roomType => (
                                     <div key={roomType} className="flex items-center space-x-2">
@@ -248,7 +353,6 @@ const AdminConventionForm = () => {
                                 ))}
                             </div>
                         </div>
-                    </div>
 
                     <div className="flex items-center justify-between">
                         <button

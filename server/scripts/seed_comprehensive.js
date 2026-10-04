@@ -169,9 +169,13 @@ const seedDatabase = async () => {
             tariff: 150.00,
             hotelName: 'Grand Hyatt Kochi Bolgatty',
             hotelDetails: 'Luxury waterfront resort on Bolgatty Island, Kochi. Features serene backwater views, modern conference halls, wellness center, and Kerala traditional cuisine.',
+            mapLink: 'https://maps.google.com/?q=Grand+Hyatt+Kochi+Bolgatty',
             roomTariffs: '{"Single": 120, "Double AC": 180, "Non-AC": 100}',
             maxCapacity: 500,
-            registeredCount: 3
+            registeredCount: 3,
+            coordinatorName: 'JOHN_VOLUNTEER',
+            coordinatorPhone: '9876543210',
+            createdBy: volunteer1.id
         });
 
         const convention2 = await Convention.create({
@@ -183,9 +187,13 @@ const seedDatabase = async () => {
             tariff: 250.00,
             hotelName: 'Tea County Hill Resort, Munnar',
             hotelDetails: 'A peaceful hill station retreat nestled amidst misty tea gardens in Munnar. Includes meditation pavilion, Ayurvedic wellness center, and guided nature walks.',
+            mapLink: 'https://maps.google.com/?q=Tea+County+Hill+Resort+Munnar',
             roomTariffs: '{"Single": 150, "Double": 220}',
             maxCapacity: 200,
-            registeredCount: 0
+            registeredCount: 0,
+            coordinatorName: 'SARAH_HOPE',
+            coordinatorPhone: '9876543211',
+            createdBy: volunteer2.id
         });
 
         const convention3 = await Convention.create({
@@ -197,9 +205,13 @@ const seedDatabase = async () => {
             tariff: 100.00,
             hotelName: 'Kovalam Beach Wellness Resort',
             hotelDetails: 'Seaside resort located along Kovalam coastline. Amenities include air-conditioned conference facilities, beachside reflection spaces, and nutritious traditional dining.',
+            mapLink: 'https://maps.google.com/?q=Kovalam+Beach+Wellness+Resort',
             roomTariffs: '{"Single": 110, "Double AC": 160}',
             maxCapacity: 300,
-            registeredCount: 0
+            registeredCount: 0,
+            coordinatorName: 'JOHN_VOLUNTEER',
+            coordinatorPhone: '9876543210',
+            createdBy: volunteer1.id
         });
 
         const convention4 = await Convention.create({
@@ -211,9 +223,13 @@ const seedDatabase = async () => {
             tariff: 180.00,
             hotelName: 'Vythiri Mist Eco-Resort, Wayanad',
             hotelDetails: 'Scenic rainforest eco-resort in the Western Ghats. Amenities include conference hall, campfire fellowship lounge, and guided nature trails.',
+            mapLink: 'https://maps.google.com/?q=Vythiri+Mist+Eco-Resort+Wayanad',
             roomTariffs: '{"Single": 140, "Double AC": 200}',
             maxCapacity: 400,
-            registeredCount: 0
+            registeredCount: 0,
+            coordinatorName: 'SARAH_HOPE',
+            coordinatorPhone: '9876543211',
+            createdBy: volunteer2.id
         });
 
         // 4. Seed Convention Registrations & Payments

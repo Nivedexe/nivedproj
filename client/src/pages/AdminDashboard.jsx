@@ -317,7 +317,14 @@ const AdminDashboard = () => {
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="text-sm text-gray-500 mt-1">{c.location} | {c.startDate} to {c.endDate}</div>
+                                            <div className="text-sm text-gray-500 mt-1">
+                                                {c.location} | {c.startDate} to {c.endDate}
+                                                {(c.coordinatorName || c.coordinatorPhone) && (
+                                                    <span className="block text-xs text-indigo-700 font-semibold mt-0.5">
+                                                        👤 Coordinator: {c.coordinatorName || 'N/A'} {c.coordinatorPhone ? `| 📞 ${c.coordinatorPhone}` : ''}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="flex items-center space-x-2">
                                             {!c.isApproved && (

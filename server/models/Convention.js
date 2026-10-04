@@ -18,6 +18,18 @@ const Convention = db.define('Convention', {
     tariff: DataTypes.DECIMAL(10, 2),
     hotelName: DataTypes.STRING,
     hotelDetails: DataTypes.TEXT,
+    mapLink: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    coordinatorName: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    coordinatorPhone: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     roomTariffs: {
         type: DataTypes.TEXT,
         defaultValue: '{"Single": 1000, "Double AC": 2000, "Non-AC": 1500}',

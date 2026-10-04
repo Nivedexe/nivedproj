@@ -377,6 +377,19 @@ const VolunteerDashboard = () => {
                                             </div>
                                             <div className="text-sm text-gray-500 mt-1">
                                                 {c.location} | {c.startDate} to {c.endDate}
+                                                {(c.coordinatorName || c.coordinatorPhone) && (
+                                                    <span className="block text-xs text-indigo-700 font-semibold mt-0.5">
+                                                        👤 Coordinator: {c.coordinatorName || 'N/A'} {c.coordinatorPhone ? `| 📞 ${c.coordinatorPhone}` : ''}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="mt-2 flex items-center space-x-2 flex-wrap">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                                    👥 {c.registeredUsersCount || 0} User{(c.registeredUsersCount || 0) === 1 ? '' : 's'} Registered
+                                                </span>
+                                                <span className="text-xs text-gray-600 font-medium">
+                                                    ({c.registeredAttendeesCount || c.registeredCount || 0} Total Members / {c.maxCapacity} Max Capacity)
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="flex items-center space-x-3">
@@ -455,11 +468,18 @@ const VolunteerDashboard = () => {
 
                 {/* Convention Registrations */}
                 <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
-                    <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div>
                             <h3 className="text-lg leading-6 font-medium text-gray-900">Convention Registrations</h3>
                             <p className="mt-1 max-w-2xl text-sm text-gray-500">View upcoming attendees and ticketing information.</p>
                         </div>
+                        {registrations.length > 0 && (
+                            <div className="bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-900 flex items-center gap-2">
+                                <span>👥 <strong>{new Set(registrations.map(r => r.UserId || r.User?.id)).size}</strong> Registered Users</span>
+                                <span className="text-indigo-300">|</span>
+                                <span>🎟️ <strong>{registrations.reduce((s, r) => s + (Number(r.memberCount) || 1), 0)}</strong> Total Attendees</span>
+                            </div>
+                        )}
                     </div>
                     <div className="border-t border-gray-200 bg-white">
                         <ul role="list" className="divide-y divide-gray-200">
@@ -469,8 +489,21 @@ const VolunteerDashboard = () => {
                                         <div className="flex-1">
                                             <div className="text-sm font-bold text-gray-900 truncate">{reg.Convention?.name}</div>
                                             <div className="text-sm font-medium text-primary mt-1">
-                                                Attendee: {reg.User?.username} ({reg.User?.email})
+                                                Attendee: <span className="font-bold text-gray-900">{reg.attendeeName || reg.User?.username}</span>
+                                                {(reg.attendeePhone || reg.User?.phone) && (
+                                                    <span className="text-gray-700 ml-2 font-normal">
+                                                        📞 {reg.attendeePhone || reg.User?.phone}
+                                                    </span>
+                                                )}
+                                                {reg.User?.email && (
+                                                    <span className="text-gray-500 text-xs ml-2">({reg.User.email})</span>
+                                                )}
                                             </div>
+                                            {reg.Convention?.coordinatorName && (
+                                                <div className="text-xs text-indigo-800 font-medium mt-0.5">
+                                                    Coordinator: {reg.Convention.coordinatorName} {reg.Convention.coordinatorPhone ? `(${reg.Convention.coordinatorPhone})` : ''}
+                                                </div>
+                                            )}
                                             <div className="text-xs text-gray-500 mt-1">
                                                 Registered on {new Date(reg.createdAt).toLocaleDateString()}
                                             </div>

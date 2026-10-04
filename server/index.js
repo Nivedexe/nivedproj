@@ -84,6 +84,28 @@ const initDb = async () => {
             await queryInterface.addColumn('Conventions', 'createdBy', { type: DataTypes.INTEGER, allowNull: true });
             console.log('Added createdBy column to Conventions');
         }
+        if (!tableConv.coordinatorName) {
+            await queryInterface.addColumn('Conventions', 'coordinatorName', { type: DataTypes.STRING, allowNull: true });
+            console.log('Added coordinatorName column to Conventions');
+        }
+        if (!tableConv.coordinatorPhone) {
+            await queryInterface.addColumn('Conventions', 'coordinatorPhone', { type: DataTypes.STRING, allowNull: true });
+            console.log('Added coordinatorPhone column to Conventions');
+        }
+        if (!tableConv.mapLink) {
+            await queryInterface.addColumn('Conventions', 'mapLink', { type: DataTypes.TEXT, allowNull: true });
+            console.log('Added mapLink column to Conventions');
+        }
+
+        const tableReg = await queryInterface.describeTable('ConventionRegistrations');
+        if (!tableReg.attendeeName) {
+            await queryInterface.addColumn('ConventionRegistrations', 'attendeeName', { type: DataTypes.STRING, allowNull: true });
+            console.log('Added attendeeName column to ConventionRegistrations');
+        }
+        if (!tableReg.attendeePhone) {
+            await queryInterface.addColumn('ConventionRegistrations', 'attendeePhone', { type: DataTypes.STRING, allowNull: true });
+            console.log('Added attendeePhone column to ConventionRegistrations');
+        }
 
         const tableTests = await queryInterface.describeTable('Tests');
         if (tableTests.hasPendingReview === undefined) {

@@ -22,6 +22,9 @@ User.hasMany(ConventionRegistration);
 ConventionRegistration.belongsTo(Convention);
 Convention.hasMany(ConventionRegistration);
 
+Convention.belongsTo(User, { as: 'creator', foreignKey: 'createdBy' });
+User.hasMany(Convention, { foreignKey: 'createdBy' });
+
 User.hasMany(Payment);
 Payment.belongsTo(User);
 

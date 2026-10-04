@@ -7,6 +7,14 @@ const ConventionRegistration = db.define('ConventionRegistration', {
         primaryKey: true,
         autoIncrement: true
     },
+    attendeeName: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    attendeePhone: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     memberCount: {
         type: DataTypes.INTEGER,
         defaultValue: 1
