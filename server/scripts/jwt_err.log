@@ -103,3 +103,15 @@
 [2026-10-04T03:49:13.878Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
 [2026-10-04T03:49:13.895Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
 [2026-10-04T03:49:13.906Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
+[2026-10-04T05:01:33.703Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
+[2026-10-04T05:01:33.706Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
+[2026-10-04T05:09:11.094Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
+[2026-10-04T05:09:11.097Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
+[2026-10-04T05:10:10.985Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
+[2026-10-04T05:10:10.988Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
+[2026-10-04T05:10:24.378Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
+[2026-10-04T05:10:24.381Z] VERIFY ERROR: jwt expired (Secret exists: true) (Token length: 160)
+[2026-10-04T05:14:49.626Z] LOGIN SUCCESS (Self-Heal): admin@erehab.com. Secret exists: true
+[2026-10-04T05:49:19.654Z] LOGIN SUCCESS (Self-Heal): admin@erehab.com. Secret exists: true
+[2026-10-04T05:49:25.223Z] LOGIN SUCCESS: nivedtestuser@gmail.com. Secret exists: true
+[2026-10-04T05:49:32.936Z] LOGIN SUCCESS: nivedvolunteer@gmail.com. Secret exists: true

@@ -1,8 +1,9 @@
 import dotenv from 'dotenv';
-import db from './config/db.js';
-import { Test } from './models/index.js';
+import db from '../config/db.js';
+import { Test } from '../models/index.js';
 
 dotenv.config();
+dotenv.config({ path: '../.env' });
 
 const cleanupAssessment = async () => {
     try {

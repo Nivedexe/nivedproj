@@ -1,4 +1,4 @@
-import { Meeting } from './models/index.js';
+import { Meeting } from '../models/index.js';
 
 export const ensureBasicMeetings = async () => {
     try {
@@ -73,7 +73,7 @@ export const ensureBasicMeetings = async () => {
 
 // If run directly:
 if (process.argv[1] && process.argv[1].includes('init_basic_meetings.js')) {
-    import('./config/db.js').then(async ({ default: db }) => {
+    import('../config/db.js').then(async ({ default: db }) => {
         await db.authenticate();
         await db.sync();
         await ensureBasicMeetings();

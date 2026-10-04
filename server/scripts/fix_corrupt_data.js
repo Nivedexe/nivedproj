@@ -1,5 +1,5 @@
-import { Test, TestResult, Convention } from './models/index.js';
-import db from './config/db.js';
+import { Test, TestResult, Convention } from '../models/index.js';
+import db from '../config/db.js';
 
 async function fixCorruptData() {
     try {

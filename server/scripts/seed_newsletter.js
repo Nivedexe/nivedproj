@@ -1,8 +1,9 @@
 import dotenv from 'dotenv';
-import db from './config/db.js';
-import { Newsletter } from './models/index.js';
+import db from '../config/db.js';
+import { Newsletter } from '../models/index.js';
 
 dotenv.config();
+dotenv.config({ path: '../.env' });
 
 const seedNewsletter = async () => {
     try {

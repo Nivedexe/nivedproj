@@ -1,8 +1,9 @@
 import dotenv from 'dotenv';
-import db from './config/db.js';
-import { Convention } from './models/index.js';
+import db from '../config/db.js';
+import { Convention } from '../models/index.js';
 
 dotenv.config();
+dotenv.config({ path: '../.env' });
 
 const seedConventions = async () => {
     try {

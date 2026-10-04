@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
 dotenv.config();
+dotenv.config({ path: '../.env' });
 
 async function run() {
     const connection = await mysql.createConnection({

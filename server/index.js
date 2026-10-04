@@ -15,7 +15,7 @@ import testRoutes from './routes/testRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import newsletterRoutes from './routes/newsletterRoutes.js';
-import { ensureBasicMeetings } from './init_basic_meetings.js';
+import { ensureBasicMeetings } from './utils/init_basic_meetings.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 
 dotenv.config();
+dotenv.config({ path: '../.env' });
 
 async function run() {
     try {

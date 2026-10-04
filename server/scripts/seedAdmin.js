@@ -1,10 +1,11 @@
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import { User } from './models/index.js';
-import db from './config/db.js';
+import { User } from '../models/index.js';
+import db from '../config/db.js';
 import fs from 'fs';
 
 dotenv.config();
+dotenv.config({ path: '../.env' });
 
 const seedAdmin = async () => {
     try {

@@ -1,9 +1,10 @@
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import db from './config/db.js';
-import { User, Meeting, Convention, Test, ConventionRegistration, Payment, Feedback, Newsletter } from './models/index.js';
+import db from '../config/db.js';
+import { User, Meeting, Convention, Test, ConventionRegistration, Payment, Feedback, Newsletter } from '../models/index.js';
 
 dotenv.config();
+dotenv.config({ path: '../.env' });
 
 const seedDatabase = async () => {
     try {
