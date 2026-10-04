@@ -59,7 +59,7 @@ const TipplerDashboard = () => {
                         </div>
                         <div className="bg-gray-50 px-5 py-3">
                             <div className="text-sm">
-                                <Link to="/assessments" className="font-medium text-indigo-700 hover:text-indigo-900">Take the AUDIT test &rarr;</Link>
+                                <Link to="/assessments" className="font-medium text-indigo-700 hover:text-indigo-900">Take the Self-Assessment &rarr;</Link>
                             </div>
                         </div>
                     </div>

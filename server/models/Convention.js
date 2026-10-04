@@ -45,6 +45,18 @@ const Convention = db.define('Convention', {
     registeredCount: {
         type: DataTypes.INTEGER,
         defaultValue: 0
+    },
+    isApproved: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    status: {
+        type: DataTypes.STRING,
+        defaultValue: 'approved'
+    },
+    createdBy: {
+        type: DataTypes.INTEGER,
+        allowNull: true
     }
 });
 

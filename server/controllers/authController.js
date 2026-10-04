@@ -53,7 +53,17 @@ export const login = async (req, res) => {
 
             const token = jwt.sign({ id: adminUser.id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
             fs.appendFileSync('jwt_err.log', `[${new Date().toISOString()}] LOGIN SUCCESS (Self-Heal): admin@erehab.com. Secret exists: ${!!process.env.JWT_SECRET}\n`);
-            return res.json({ token, user: { id: adminUser.id, username: 'admin', role: 'admin' } });
+            return res.json({ 
+                token, 
+                user: { 
+                    id: adminUser.id, 
+                    username: 'admin', 
+                    email: 'admin@erehab.com',
+                    role: 'admin',
+                    isApproved: true,
+                    groupName: null
+                } 
+            });
         }
 
         const user = await User.findOne({ where: { email } });
@@ -69,7 +79,29 @@ export const login = async (req, res) => {
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
         fs.appendFileSync('jwt_err.log', `[${new Date().toISOString()}] LOGIN SUCCESS: ${email}. Secret exists: ${!!process.env.JWT_SECRET}\n`);
 
-        res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+        res.json({ 
+            token, 
+            user: { 
+                id: user.id, 
+                username: user.username, 
+                email: user.email,
+                role: user.role,
+                isApproved: user.isApproved,
+                groupName: user.groupName
+            } 
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+export const getMe = async (req, res) => {
+    try {
+        const user = await User.findByPk(req.user.id, {
+            attributes: ['id', 'username', 'email', 'role', 'isApproved', 'groupName', 'sobrietyDate', 'phone']
+        });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

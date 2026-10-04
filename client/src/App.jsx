@@ -16,7 +16,15 @@ import AdminUserForm from './pages/admin/AdminUserForm';
 import TipplerDashboard from './pages/TipplerDashboard';
 import VolunteerDashboard from './pages/VolunteerDashboard';
 
-const Home = () => (
+const Home = () => {
+    const { user } = useContext(AuthContext);
+
+    // If volunteer is awaiting approval, set the volunteer dashboard waiting screen as their main home page
+    if (user?.role === 'volunteer' && !user?.isApproved) {
+        return <VolunteerDashboard />;
+    }
+
+    return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
         <Navbar />
         <main className="flex-grow">
@@ -39,21 +47,31 @@ const Home = () => (
                                 </p>
                                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                                     <div className="rounded-md shadow">
-                                        {useContext(AuthContext).user ? (
-                                            <a href="/assessments" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
-                                                Start Assessment
-                                            </a>
-                                        ) : (
+                                        {!user ? (
                                             <a href="/register" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
                                                 Join the Fellowship
                                             </a>
+                                        ) : user.role === 'volunteer' ? (
+                                            <a href="/volunteer-dashboard" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
+                                                Volunteer Dashboard
+                                            </a>
+                                        ) : user.role === 'admin' ? (
+                                            <a href="/admin" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
+                                                Admin Dashboard
+                                            </a>
+                                        ) : (
+                                            <a href="/assessments" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
+                                                Start Assessment
+                                            </a>
                                         )}
                                     </div>
-                                    <div className="mt-3 sm:mt-0 sm:ml-3">
-                                        <a href="/meetings" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10">
-                                            Find a Meeting
-                                        </a>
-                                    </div>
+                                    {!(user?.role === 'tippler' && !user?.isApproved) && (
+                                        <div className="mt-3 sm:mt-0 sm:ml-3">
+                                            <a href="/meetings" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10">
+                                                Find a Meeting
+                                            </a>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </main>
@@ -234,7 +252,8 @@ const Home = () => (
             </div>
         </footer>
     </div>
-);
+    );
+};
 
 function App() {
     return (
@@ -256,7 +275,7 @@ function App() {
                     </ProtectedRoute>
                 } />
                 <Route path="/volunteer-dashboard" element={
-                    <ProtectedRoute>
+                    <ProtectedRoute allowPendingVolunteer={true}>
                         <VolunteerDashboard />
                     </ProtectedRoute>
                 } />
@@ -306,7 +325,7 @@ function App() {
                     </ProtectedRoute>
                 } />
                 <Route path="/assessments" element={
-                    <ProtectedRoute>
+                    <ProtectedRoute allowUnapprovedTippler={true}>
                         <Assessments />
                     </ProtectedRoute>
                 } />

@@ -11,6 +11,7 @@ const AdminDashboard = () => {
     const [meetings, setMeetings] = useState([]);
     const [conventions, setConventions] = useState([]);
     const [assessmentId, setAssessmentId] = useState(null);
+    const [assessment, setAssessment] = useState(null);
     const [testResults, setTestResults] = useState([]);
     const [newsletters, setNewsletters] = useState([]);
     const [feedbacks, setFeedbacks] = useState([]);
@@ -44,6 +45,7 @@ const AdminDashboard = () => {
             if (results[1].status === 'fulfilled') setMeetings(results[1].value.data);
             if (results[2].status === 'fulfilled') setConventions(results[2].value.data);
             if (results[3].status === 'fulfilled' && results[3].value.data.length > 0) {
+                setAssessment(results[3].value.data[0]);
                 setAssessmentId(results[3].value.data[0].id);
             }
             if (results[4].status === 'fulfilled') setTestResults(results[4].value.data || []);
@@ -51,6 +53,88 @@ const AdminDashboard = () => {
             if (results[6].status === 'fulfilled') setFeedbacks(results[6].value.data || []);
         } catch (error) {
             console.error('Error fetching admin data', error);
+        }
+    };
+
+    const handleApproveConvention = async (id) => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.put(`http://localhost:5000/api/conventions/${id}/approve`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setConventions(conventions.map(c => c.id === id ? { ...c, isApproved: true, status: 'approved' } : c));
+        } catch (err) {
+            alert('Failed to approve convention');
+        }
+    };
+
+    const handleRejectConvention = async (id) => {
+        if (window.confirm('Reject and delete this convention? The volunteer will need to create it again.')) {
+            try {
+                const token = localStorage.getItem('token');
+                await axios.put(`http://localhost:5000/api/conventions/${id}/reject`, {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setConventions(conventions.filter(c => c.id !== id));
+            } catch (err) {
+                alert('Failed to reject convention');
+            }
+        }
+    };
+
+    const handleApproveTestEdit = async (id) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.put(`http://localhost:5000/api/tests/${id}/approve-edit`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setAssessment(res.data.test);
+            alert('Volunteer assessment changes approved and published live!');
+            fetchData();
+        } catch (err) {
+            alert('Failed to approve test edits: ' + (err.response?.data?.message || err.message));
+        }
+    };
+
+    const handleRejectTestEdit = async (id) => {
+        if (window.confirm('Reject and discard the volunteer changes? The live assessment will remain unchanged.')) {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.put(`http://localhost:5000/api/tests/${id}/reject-edit`, {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setAssessment(res.data.test);
+                alert('Volunteer changes rejected and discarded.');
+                fetchData();
+            } catch (err) {
+                alert('Failed to reject test edits: ' + (err.response?.data?.message || err.message));
+            }
+        }
+    };
+
+    const handleApproveUser = async (userId) => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.put(`http://localhost:5000/api/users/${userId}/approve`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setUsers(users.map(u => u.id === userId ? { ...u, isApproved: true } : u));
+        } catch (err) {
+            alert('Failed to approve user');
+        }
+    };
+
+    const handleRejectUser = async (userId) => {
+        if (window.confirm('Reject and remove this volunteer user? Their account will be deleted.')) {
+            try {
+                const token = localStorage.getItem('token');
+                await axios.put(`http://localhost:5000/api/users/${userId}/reject`, {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setUsers(users.filter(u => u.id !== userId));
+            } catch (err) {
+                alert('Failed to reject user');
+            }
         }
     };
 
@@ -209,7 +293,7 @@ const AdminDashboard = () => {
                     <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
                         <div>
                             <h3 className="text-lg leading-6 font-medium text-gray-900">Manage Conventions</h3>
-                            <p className="mt-1 max-w-2xl text-sm text-gray-500">Create upcoming conventions.</p>
+                            <p className="mt-1 max-w-2xl text-sm text-gray-500">Create upcoming conventions and review volunteer submissions.</p>
                         </div>
                         <Link to="/admin/conventions/new" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm">
                             Create Convention
@@ -219,13 +303,40 @@ const AdminDashboard = () => {
                         <ul role="list" className="divide-y divide-gray-200">
                             {conventions.map((c) => (
                                 <li key={c.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                         <div className="flex-1">
-                                            <div className="text-sm font-medium text-primary truncate">{c.name}</div>
-                                            <div className="text-sm text-gray-500">{c.location} - {c.startDate}</div>
+                                            <div className="flex items-center space-x-2">
+                                                <span className="text-sm font-bold text-gray-900 truncate">{c.name}</span>
+                                                {!c.isApproved ? (
+                                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-300 animate-pulse">
+                                                        ⏳ Waiting for Approval
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-200">
+                                                        ✓ Approved & Live
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-sm text-gray-500 mt-1">{c.location} | {c.startDate} to {c.endDate}</div>
                                         </div>
-                                        <div className="flex space-x-2">
-                                            <Link to={`/admin/conventions/edit/${c.id}`} className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">Edit</Link>
+                                        <div className="flex items-center space-x-2">
+                                            {!c.isApproved && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => handleApproveConvention(c.id)}
+                                                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold shadow-sm transition-colors"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleRejectConvention(c.id)}
+                                                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-bold shadow-sm transition-colors"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </>
+                                            )}
+                                            <Link to={`/admin/conventions/edit/${c.id}`} className="text-indigo-600 hover:text-indigo-900 text-sm font-medium ml-2">Edit</Link>
                                             <button onClick={() => handleDeleteConvention(c.id)} className="text-red-600 hover:text-red-900 text-sm font-medium">Delete</button>
                                         </div>
                                     </div>
@@ -241,12 +352,39 @@ const AdminDashboard = () => {
                     <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
                         <div>
                             <h3 className="text-lg leading-6 font-medium text-gray-900">Manage Assessments</h3>
-                            <p className="mt-1 max-w-2xl text-sm text-gray-500">Edit the self-assessment (AUDIT).</p>
+                            <p className="mt-1 max-w-2xl text-sm text-gray-500">Edit the clinical substance-use self-assessment questions and scoring.</p>
                         </div>
                         <Link to={assessmentId ? `/admin/assessments/${assessmentId}` : '/admin/assessments/new'} className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm">
                             {assessmentId ? 'Edit Assessment' : 'Create Assessment'}
                         </Link>
                     </div>
+                    {assessment?.hasPendingReview && (
+                        <div className="bg-amber-50 border-t border-amber-200 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-amber-900 font-bold text-sm">⚠️ Volunteer Edits Awaiting Approval</span>
+                                    <span className="bg-amber-200 text-amber-900 text-xs px-2 py-0.5 rounded font-semibold uppercase">Pending Review</span>
+                                </div>
+                                <p className="text-xs text-amber-700 mt-1">
+                                    A volunteer has updated questions or scoring criteria. Tipplers will continue using the active test until you approve these changes.
+                                </p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    onClick={() => handleApproveTestEdit(assessment.id)}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-xs font-bold shadow-sm transition-colors"
+                                >
+                                    ✓ Approve Changes
+                                </button>
+                                <button
+                                    onClick={() => handleRejectTestEdit(assessment.id)}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded text-xs font-bold shadow-sm transition-colors"
+                                >
+                                    ✕ Reject Changes
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Users Section */}
@@ -254,7 +392,7 @@ const AdminDashboard = () => {
                     <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
                         <div>
                             <h3 className="text-lg leading-6 font-medium text-gray-900">User Management</h3>
-                            <p className="mt-1 max-w-2xl text-sm text-gray-500">List of all registered users.</p>
+                            <p className="mt-1 max-w-2xl text-sm text-gray-500">List of all registered users and pending volunteers.</p>
                         </div>
                         <Link to="/admin/users/new" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm">
                             Create User
@@ -270,12 +408,35 @@ const AdminDashboard = () => {
                                                 {u.username && u.username.length > 0 ? u.username[0].toUpperCase() : '?'}
                                             </div>
                                             <div className="ml-4">
-                                                <div className="text-sm font-medium text-primary truncate">{u.username}</div>
+                                                <div className="flex items-center space-x-2">
+                                                    <span className="text-sm font-medium text-primary truncate">{u.username}</span>
+                                                    {u.role === 'volunteer' && !u.isApproved && (
+                                                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-300 animate-pulse">
+                                                            ⏳ Waiting for Approval
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <div className="text-sm text-gray-500">{u.email}</div>
                                                 <div className="text-xs text-gray-400">Membership: {u.isApproved ? 'Active' : 'Pending'}</div>
                                             </div>
                                         </div>
-                                        <div className="ml-2 flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                                        <div className="ml-2 flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                                            {u.role === 'volunteer' && !u.isApproved && (
+                                                <div className="flex items-center space-x-2 mr-2">
+                                                    <button
+                                                        onClick={() => handleApproveUser(u.id)}
+                                                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold shadow-sm transition-colors"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleRejectUser(u.id)}
+                                                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-bold shadow-sm transition-colors"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            )}
                                             {(u.role === 'tippler' || u.role === 'volunteer') && (
                                                 <div className="flex items-center">
                                                     <input

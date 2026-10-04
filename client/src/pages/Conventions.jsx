@@ -89,6 +89,38 @@ const Conventions = () => {
         setShowPayment(true);
     };
 
+    const handleVolunteerAttend = async () => {
+        setProcessingPayment(true);
+        setError('');
+
+        try {
+            const token = localStorage.getItem('token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+
+            await axios.post(
+                `http://localhost:5000/api/conventions/${selectedConvention.id}/register`,
+                {
+                    memberCount: 1,
+                    foodPreference: registrationData.foodPreference || 'Veg',
+                    roomType: 'Volunteer Delegate',
+                    totalAmount: 0
+                },
+                config
+            );
+
+            alert(`Attendance Confirmed! You are registered for ${selectedConvention.name}.`);
+            setSelectedConvention(null);
+
+            // Refresh to update registered count
+            const refreshRes = await axios.get('http://localhost:5000/api/conventions', config);
+            setConventions(refreshRes.data);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Attendance confirmation failed. Please try again.');
+        } finally {
+            setProcessingPayment(false);
+        }
+    };
+
     const handlePaymentSubmit = async (e) => {
         e.preventDefault();
         setProcessingPayment(true);
@@ -180,7 +212,11 @@ const Conventions = () => {
 
                                         <div className="bg-gray-50 p-3 rounded text-sm mb-4 border border-gray-100">
                                             <p><span className="font-semibold">Hotel:</span> {conv.hotelName || (conv.hotelDetails ? conv.hotelDetails.substring(0, 25) + '...' : 'TBA')}</p>
-                                            <p className="mt-1"><span className="font-semibold">Base Tariff:</span> ₹{conv.tariff}</p>
+                                            {user?.role === 'volunteer' ? (
+                                                <p className="mt-1 text-emerald-600 font-semibold"><span className="text-gray-700 font-normal">Volunteer Pass:</span> Free / Complimentary</p>
+                                            ) : (
+                                                <p className="mt-1"><span className="font-semibold">Base Tariff:</span> ₹{conv.tariff}</p>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center justify-between mt-4">
@@ -194,7 +230,11 @@ const Conventions = () => {
                                         disabled={conv.registeredCount >= conv.maxCapacity}
                                         className={`mt-6 w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${conv.registeredCount >= conv.maxCapacity ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}
                                     >
-                                        {conv.registeredCount >= conv.maxCapacity ? 'Sold Out' : 'Register Now'}
+                                        {conv.registeredCount >= conv.maxCapacity 
+                                            ? 'Sold Out' 
+                                            : user?.role === 'volunteer' 
+                                                ? 'Attend' 
+                                                : 'Register Now'}
                                     </button>
                                 </div>
                             </div>
@@ -214,10 +254,71 @@ const Conventions = () => {
                                     <div className="sm:flex sm:items-start">
                                         <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                                             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
-                                                {showPayment ? 'Payment Checkout' : `Register for ${selectedConvention.name}`}
+                                                {user?.role === 'volunteer' 
+                                                    ? `Attend Confirmation: ${selectedConvention.name}`
+                                                    : showPayment 
+                                                        ? 'Payment Checkout' 
+                                                        : `Register for ${selectedConvention.name}`}
                                             </h3>
 
-                                            {!showPayment ? (
+                                            {user?.role === 'volunteer' ? (
+                                                /* Volunteer Attend Confirmation View */
+                                                <div className="mt-4 space-y-4">
+                                                    <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-200 text-indigo-800 uppercase tracking-wide">
+                                                                Volunteer Delegate Pass
+                                                            </span>
+                                                            <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                                                Complimentary
+                                                            </span>
+                                                        </div>
+                                                        <h4 className="text-xl font-bold text-gray-900 mt-2">{selectedConvention.name}</h4>
+                                                        <p className="text-sm text-indigo-700 font-medium mt-1">
+                                                            📍 {selectedConvention.location}
+                                                        </p>
+                                                        <p className="text-xs text-gray-600 mt-1">
+                                                            🗓️ {new Date(selectedConvention.startDate).toLocaleDateString()} — {new Date(selectedConvention.endDate).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="bg-gray-50 p-3 rounded-md text-sm border border-gray-200">
+                                                        <p><span className="font-semibold text-gray-800">Hotel / Venue:</span> {selectedConvention.hotelName || 'TBA'}</p>
+                                                        {selectedConvention.hotelDetails && (
+                                                            <p className="mt-1 text-gray-600 text-xs">{selectedConvention.hotelDetails}</p>
+                                                        )}
+                                                    </div>
+
+                                                    <div>
+                                                        <h5 className="text-xs font-semibold uppercase text-gray-500 tracking-wider mb-1">Conference Overview</h5>
+                                                        <p className="text-sm text-gray-700 leading-relaxed bg-white p-3 rounded-md border border-gray-200">
+                                                            {selectedConvention.description}
+                                                        </p>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Meal Preference (Complimentary)</label>
+                                                        <select
+                                                            name="foodPreference"
+                                                            value={registrationData.foodPreference}
+                                                            onChange={handleRegistrationChange}
+                                                            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                                                        >
+                                                            <option value="Veg">Vegetarian</option>
+                                                            <option value="Non-Veg">Non-Vegetarian</option>
+                                                            <option value="Vegan">Vegan</option>
+                                                            <option value="Buffet">Buffet Access</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div className="bg-emerald-50 border border-emerald-200 rounded-md p-3 text-emerald-800 text-xs flex items-center">
+                                                        <svg className="w-5 h-5 mr-2 text-emerald-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                        </svg>
+                                                        <span>As an active Volunteer, your attendance is fully supported. No ticket fees, room tariffs, or payment processing are required.</span>
+                                                    </div>
+                                                </div>
+                                            ) : !showPayment ? (
                                                 <div className="mt-4 space-y-4">
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">Number of Members</label>
@@ -322,7 +423,25 @@ const Conventions = () => {
                                         </div>
                                     </div>
                                 </div>
-                                {!showPayment && (
+                                {user?.role === 'volunteer' ? (
+                                    <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
+                                        <button
+                                            type="button"
+                                            onClick={handleVolunteerAttend}
+                                            disabled={processingPayment}
+                                            className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-5 py-2.5 bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:ml-3 sm:w-auto sm:text-sm ${processingPayment ? 'bg-gray-400 cursor-wait' : ''}`}
+                                        >
+                                            {processingPayment ? 'Confirming Attendance...' : 'Attend Confirmation'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedConvention(null)}
+                                            className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                ) : !showPayment && (
                                     <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
                                         <button
                                             type="button"

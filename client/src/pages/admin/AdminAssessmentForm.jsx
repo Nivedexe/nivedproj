@@ -1,24 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../../components/Navbar';
+import { AuthContext } from '../../context/AuthContext';
 
 const AdminAssessmentForm = () => {
+    const { user } = useContext(AuthContext);
     const { id } = useParams();
     const navigate = useNavigate();
     const isEditMode = !!id;
 
     // Hidden General Settings (Defaults)
     const [formData, setFormData] = useState({
-        title: 'AUDIT Assessment',
-        description: 'The Alcohol Use Disorders Identification Test (AUDIT) is a 10-item screening tool developed by the World Health Organization (WHO) to assess alcohol consumption, drinking behaviors, and alcohol-related problems.',
-        criteria: '0-3: Low Risk, 4-6: Hazardous Use, 7-8: Harmful Use, 9-10: Possible Dependence',
+        title: 'Clinical Substance Use Risk Assessment',
+        description: 'A clinically inspired 10-question assessment to evaluate substance use patterns and associated risks.',
+        criteria: 'Answer all 10 questions honestly to receive a clinically inspired substance-use risk evaluation.',
         scoringLogic: JSON.stringify({
-            "bands": [
-                { "min": 0, "max": 3, "label": "Low Risk", "advice": "Your drinking is within low-risk limits." },
-                { "min": 4, "max": 6, "label": "Hazardous Use", "advice": "Your drinking pattern may be hazardous to your health." },
-                { "min": 7, "max": 8, "label": "Harmful Use", "advice": "Your drinking is harmful. You should cut down or stop." },
-                { "min": 9, "max": 10, "label": "Possible Dependence", "advice": "You may be dependent on alcohol. Please seek professional help." }
+            calculation: "total / 3.6",
+            thresholds: [
+                { maxScore: 2, message: "Low Risk" },
+                { maxScore: 4, message: "Mild Risk" },
+                { maxScore: 6, message: "Moderate Risk" },
+                { maxScore: 8, message: "High Risk" },
+                { maxScore: 10, message: "Severe Risk (Immediate Professional Attention Recommended)" }
             ]
         }, null, 2)
     });
@@ -35,7 +39,6 @@ const AdminAssessmentForm = () => {
             helpText: '',
             type: 'single-choice',
             options: [{ text: '', score: 0 }],
-            // Removed min/max/category as per request
             weight: 1,
             locale: 'en',
             active: true
@@ -102,9 +105,7 @@ const AdminAssessmentForm = () => {
     const saveQuestion = () => {
         let questionToSave = { ...currentQuestion };
 
-        // Auto-assign scores logic removed to allow manual scoring
         if (questionToSave.type === 'single-choice') {
-            // Ensure scores are numbers
             questionToSave.options = questionToSave.options.map(opt => ({
                 ...opt,
                 score: Number(opt.score)
@@ -142,10 +143,16 @@ const AdminAssessmentForm = () => {
             if (isEditMode) {
                 await axios.put(`http://localhost:5000/api/tests/${id}`, payload, config);
             } else {
-                // Even if "new", we treat it as creating the singleton or a new one
                 await axios.post('http://localhost:5000/api/tests', payload, config);
             }
-            navigate('/admin');
+
+            if (user?.role === 'volunteer') {
+                alert('Assessment edits saved! Your proposed changes have been submitted to the Administrator for approval.');
+                navigate('/volunteer-dashboard');
+            } else {
+                alert('Assessment updated and published live!');
+                navigate('/admin');
+            }
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to save test.');
         }
@@ -155,17 +162,44 @@ const AdminAssessmentForm = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Navbar />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Edit Assessment
-                    </h1>
-                    <button
-                        onClick={handleSubmit}
-                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow-lg transition-transform transform hover:scale-105"
-                    >
-                        Save Assessment
-                    </button>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">
+                            Edit Assessment
+                        </h1>
+                        <p className="text-sm text-gray-500 mt-1">Configure questions, answer weights, and screening evaluation.</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                        <button
+                            type="button"
+                            onClick={() => navigate(user?.role === 'volunteer' ? '/volunteer-dashboard' : '/admin')}
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-5 rounded shadow-sm transition-colors text-sm"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow-lg transition-transform transform hover:scale-105 text-sm"
+                        >
+                            {user?.role === 'volunteer' ? 'Submit Edits for Approval' : 'Save & Publish Assessment'}
+                        </button>
+                    </div>
                 </div>
+
+                {user?.role === 'volunteer' && (
+                    <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r shadow-sm">
+                        <div className="flex">
+                            <div className="flex-shrink-0 text-xl">⏳</div>
+                            <div className="ml-3">
+                                <h3 className="text-sm font-bold text-amber-900">Volunteer Assessment Moderation Notice</h3>
+                                <p className="text-sm text-amber-700 mt-1">
+                                    As a volunteer, your edits to questions and scoring will be saved as draft changes awaiting administrator review. 
+                                    Tipplers taking the assessment will continue to see the current active version until your edits are reviewed and approved.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">{error}</div>}
 

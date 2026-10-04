@@ -5,7 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 const Assessments = () => {
-    const { user } = useContext(AuthContext);
+    const { user, refreshUser } = useContext(AuthContext);
     const [view, setView] = useState('landing'); // landing, quiz, results
     const [testData, setTestData] = useState(null);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -16,30 +16,53 @@ const Assessments = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const fetchTest = async () => {
+        const fetchTestAndResult = async () => {
             try {
                 const token = localStorage.getItem('token');
                 const config = { headers: { Authorization: `Bearer ${token}` } };
-                const res = await axios.get('http://localhost:5000/api/tests', config);
 
-                if (res.data.length > 0) {
+                const [testRes, myResultRes] = await Promise.all([
+                    axios.get('http://localhost:5000/api/tests', config),
+                    axios.get('http://localhost:5000/api/tests/my-result', config).catch(() => ({ data: null }))
+                ]);
+
+                if (testRes.data.length > 0) {
                     // Filter out inactive questions
                     const activeTest = {
-                        ...res.data[0],
-                        questions: res.data[0].questions.filter(q => q.active !== false)
+                        ...testRes.data[0],
+                        questions: testRes.data[0].questions.filter(q => q.active !== false)
                     };
                     setTestData(activeTest);
                 }
+
+                // If user has already completed the assessment, show their results directly!
+                if (myResultRes && myResultRes.data) {
+                    setScore(myResultRes.data.score);
+                    setResultBand(myResultRes.data.resultBand);
+                    setAnswers(myResultRes.data.answers || {});
+                    setView('results');
+                } else {
+                    setView('landing');
+                }
+
                 setLoading(false);
             } catch (err) {
                 setError('Failed to load assessment.');
                 setLoading(false);
             }
         };
-        fetchTest();
+        fetchTestAndResult();
     }, []);
 
     const handleStart = () => {
+        setAnswers({});
+        setCurrentQuestionIndex(0);
+        setView('quiz');
+    };
+
+    const handleRetake = () => {
+        setAnswers({});
+        setCurrentQuestionIndex(0);
         setView('quiz');
     };
 
@@ -122,6 +145,10 @@ const Assessments = () => {
                 score: normalizedScore,
                 resultBand: finalBand
             }, config);
+
+            if (refreshUser) {
+                await refreshUser();
+            }
         } catch (err) {
             console.error('Failed to submit test results', err);
             // Even if it fails, we show user their results locally
@@ -283,7 +310,11 @@ const Assessments = () => {
                 {view === 'results' && (
                     <div className="bg-white shadow-lg rounded-lg overflow-hidden">
                         <div className="px-6 py-8 sm:p-10 text-center">
-                            <h2 className="text-3xl font-bold text-gray-900 mb-2">Your Result</h2>
+                            <div className="inline-flex items-center space-x-1.5 bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider mb-3">
+                                <span>✓</span>
+                                <span>Assessment Completed</span>
+                            </div>
+                            <h2 className="text-3xl font-bold text-gray-900 mb-2">Your Assessment Result</h2>
 
                             <div className="my-8">
                                 <div className={`inline-block px-6 py-2 rounded-full text-lg font-bold mb-4 ${score < 4 ? 'bg-green-100 text-green-800' :
@@ -343,36 +374,36 @@ const Assessments = () => {
                                     </div>
                                 )}
 
-                                <div className="flex justify-center space-x-4 w-full">
+                                <div className="flex flex-wrap justify-center gap-4 w-full">
                                     <button
-                                        onClick={() => window.location.reload()}
-                                        className="px-6 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
+                                        onClick={handleRetake}
+                                        className="px-6 py-3 border-2 border-indigo-600 text-indigo-700 bg-white rounded-md font-semibold hover:bg-indigo-50 transition-colors shadow-sm"
                                     >
                                         Retake Assessment
                                     </button>
 
                                     {score >= 9 ? (
-                                        <div className="flex space-x-4">
-                                            <a
-                                                href="/meetings"
-                                                className="px-6 py-3 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 animate-pulse"
+                                        <div className="flex flex-wrap gap-4">
+                                            <Link
+                                                to="/meetings"
+                                                className="px-6 py-3 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 animate-pulse shadow-md"
                                             >
                                                 Join a Meeting Now
-                                            </a>
-                                            <a
-                                                href="/conventions"
+                                            </Link>
+                                            <Link
+                                                to="/conventions"
                                                 className="px-6 py-3 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 animate-pulse border-2 border-red-800 shadow-lg"
                                             >
                                                 Book a Convention
-                                            </a>
+                                            </Link>
                                         </div>
                                     ) : (
-                                        <a
-                                            href="/meetings"
-                                            className="px-6 py-3 bg-primary text-white rounded-md font-medium hover:bg-indigo-700"
+                                        <Link
+                                            to="/meetings"
+                                            className="px-6 py-3 bg-primary text-white rounded-md font-semibold hover:bg-indigo-700 shadow-md transition-colors"
                                         >
                                             Find a Meeting
-                                        </a>
+                                        </Link>
                                     )}
                                 </div>
                             </div>
@@ -381,16 +412,16 @@ const Assessments = () => {
                 )}
 
                 {/* Safety Footer */}
-                <div className="mt-12 border-t border-gray-200 pt-8 text-center">
-                    <p className="text-sm text-gray-500 mb-2">
+                <div className="mt-12 border-t border-gray-200 pt-8 text-center space-y-2 max-w-xl mx-auto">
+                    <p className="text-sm text-gray-500">
                         Disclaimer: This self-assessment is for educational purposes only and does not constitute a medical diagnosis.
                     </p>
-                    <p className="text-sm font-bold text-red-600">
-                        If you are in immediate danger or experiencing a medical emergency, please call 112 or your local emergency number immediately.
+                    <p className="text-sm font-bold text-red-600 leading-relaxed">
+                        If you are in immediate danger or experiencing a medical emergency,<br className="hidden sm:inline" /> please call <a href="tel:112" className="underline hover:text-red-700">112</a> or seek emergency medical assistance immediately.
                     </p>
-                    <div className="mt-4 text-sm text-gray-600">
-                        Crisis Hotline: <a href="tel:988" className="text-primary hover:underline">14416</a> (Suicide & Crisis Lifeline)
-                    </div>
+                    <p className="text-sm font-medium text-gray-700 pt-1">
+                        Tele-MANAS Mental Health Helpline: <a href="tel:14416" className="text-primary font-bold hover:underline">14416</a> (24×7)
+                    </p>
                 </div>
 
             </div>

@@ -38,8 +38,83 @@ export const updateTest = async (req, res) => {
 
         if (!test) return res.status(404).json({ message: 'Test not found' });
 
-        await test.update({ title, description, criteria, questions, scoringLogic });
+        if (req.user && req.user.role === 'volunteer') {
+            // Volunteer edits: Do not overwrite live questions for Tipplers!
+            // Save into pendingChanges and flag hasPendingReview: true
+            const pendingData = {
+                title,
+                description,
+                criteria,
+                questions,
+                scoringLogic,
+                editedBy: req.user.username || req.user.email || 'Volunteer',
+                editedAt: new Date()
+            };
+            await test.update({
+                hasPendingReview: true,
+                pendingChanges: JSON.stringify(pendingData)
+            });
+            return res.json({ 
+                message: 'Assessment changes submitted for Admin approval. Live questions remain active for Tipplers until approved.',
+                test 
+            });
+        }
+
+        // Admin edits: Update directly and clear any pending flags
+        await test.update({ 
+            title, 
+            description, 
+            criteria, 
+            questions, 
+            scoringLogic,
+            hasPendingReview: false,
+            pendingChanges: null
+        });
         res.json(test);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+export const approveTestEdit = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const test = await Test.findByPk(id);
+        if (!test) return res.status(404).json({ message: 'Test not found' });
+
+        if (!test.hasPendingReview || !test.pendingChanges) {
+            return res.status(400).json({ message: 'No pending changes found for this assessment' });
+        }
+
+        const pending = typeof test.pendingChanges === 'string' ? JSON.parse(test.pendingChanges) : test.pendingChanges;
+        await test.update({
+            title: pending.title || test.title,
+            description: pending.description || test.description,
+            criteria: pending.criteria || test.criteria,
+            questions: pending.questions || test.questions,
+            scoringLogic: pending.scoringLogic || test.scoringLogic,
+            hasPendingReview: false,
+            pendingChanges: null
+        });
+
+        res.json({ message: 'Volunteer assessment changes approved and published live!', test });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+export const rejectTestEdit = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const test = await Test.findByPk(id);
+        if (!test) return res.status(404).json({ message: 'Test not found' });
+
+        await test.update({
+            hasPendingReview: false,
+            pendingChanges: null
+        });
+
+        res.json({ message: 'Pending assessment changes rejected and discarded.', test });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -73,10 +148,13 @@ export const submitTestResult = async (req, res) => {
             UserId: userId
         });
 
-        // Auto-approve users with low scores if desired, or leave it for manual admin approval.
-        // For E-REHAB, admin manually reviews `test_ans` via `evaluation_test` to activate `Membership`.
+        // Once the tippler completes the assessment, activate their access to meetings, conventions, and dashboard
+        const user = await User.findByPk(userId);
+        if (user && user.role === 'tippler') {
+            await user.update({ isApproved: true });
+        }
 
-        res.status(201).json({ message: 'Test submitted successfully', result });
+        res.status(201).json({ message: 'Test submitted successfully', result, isApproved: true });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -88,6 +166,20 @@ export const getTestResults = async (req, res) => {
             include: [{ model: User, attributes: ['username', 'email'] }, { model: Test, attributes: ['title'] }]
         });
         res.json(results);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+export const getMyLatestTestResult = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const result = await TestResult.findOne({
+            where: { UserId: userId },
+            order: [['createdAt', 'DESC']],
+            include: [{ model: Test, attributes: ['id', 'title', 'description', 'criteria'] }]
+        });
+        res.json(result || null);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

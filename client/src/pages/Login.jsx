@@ -2,10 +2,12 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -15,7 +17,15 @@ const Login = () => {
         setError('');
         const result = await login(email, password);
         if (result.success) {
-            navigate('/');
+            if (result.user?.role === 'volunteer' && !result.user?.isApproved) {
+                navigate('/volunteer-dashboard');
+            } else if (result.user?.role === 'admin') {
+                navigate('/admin');
+            } else if (result.user?.role === 'volunteer') {
+                navigate('/volunteer-dashboard');
+            } else {
+                navigate('/');
+            }
         } else {
             setError(result.message);
         }
@@ -28,7 +38,7 @@ const Login = () => {
                 <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
                     <div>
                         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
-                        <p className="mt-2 text-center text-sm text-gray-600">
+                        <p className    ="mt-2 text-center text-sm text-gray-600">
                             Or <a href="/register" className="font-medium text-primary hover:text-indigo-500">create a new account</a>
                         </p>
                     </div>
@@ -49,19 +59,27 @@ const Login = () => {
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
-                            <div>
+                            <div className="relative">
                                 <label htmlFor="password" className="sr-only">Password</label>
                                 <input
                                     id="password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     autoComplete="current-password"
                                     required
-                                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                                    className="appearance-none rounded-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none z-20 cursor-pointer"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
                             </div>
                         </div>
 

@@ -7,12 +7,32 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const refreshUser = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return null;
+            const res = await axios.get('http://localhost:5000/api/auth/me', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data) {
+                localStorage.setItem('user', JSON.stringify(res.data));
+                setUser(res.data);
+                return res.data;
+            }
+        } catch (err) {
+            console.error('Error refreshing user', err);
+        }
+        return null;
+    };
+
     useEffect(() => {
         const token = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
 
         if (token && storedUser) {
             setUser(JSON.parse(storedUser));
+            // Silently refresh user profile in background to capture status changes (approval, group)
+            refreshUser();
         }
         setLoading(false);
     }, []);
@@ -23,7 +43,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             setUser(res.data.user);
-            return { success: true };
+            return { success: true, user: res.data.user };
         } catch (error) {
             return { success: false, message: error.response?.data?.message || 'Login failed' };
         }
@@ -45,7 +65,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, refreshUser, loading }}>
             {children}
         </AuthContext.Provider>
     );

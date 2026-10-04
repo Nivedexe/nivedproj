@@ -37,7 +37,7 @@ const seedDatabase = async () => {
             isApproved: true,
             firstName: 'John',
             lastName: 'Doe',
-            phone: '555-0101',
+            phone: '+91 98470 11001',
             sobrietyDate: '2015-05-15'
         });
 
@@ -49,7 +49,7 @@ const seedDatabase = async () => {
             isApproved: true,
             firstName: 'Sarah',
             lastName: 'Hope',
-            phone: '555-0102',
+            phone: '+91 98470 11002',
             sobrietyDate: '2018-11-20'
         });
 
@@ -61,7 +61,7 @@ const seedDatabase = async () => {
             isApproved: true,
             firstName: 'Mike',
             lastName: 'T',
-            phone: '555-0201',
+            phone: '+91 94471 22001',
             sobrietyDate: '2023-01-10'
         });
 
@@ -73,7 +73,7 @@ const seedDatabase = async () => {
             isApproved: true,
             firstName: 'Linda',
             lastName: 'R',
-            phone: '555-0202',
+            phone: '+91 94471 22002',
             sobrietyDate: '2022-06-05'
         });
 
@@ -85,60 +85,89 @@ const seedDatabase = async () => {
             isApproved: false, // Needs approval
             firstName: 'Alex',
             lastName: 'N',
-            phone: '555-0203'
+            phone: '+91 94471 22003'
         });
 
         // 2. Seed Meetings
-        console.log('Seeding Meetings...');
+        console.log('Seeding Meetings (3 Basic Daily Fellowship Meetings + Custom Meetings)...');
         const now = new Date();
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const meeting1 = await Meeting.create({
-            title: 'Morning Reflections',
-            groupName: 'Early Risers Group',
-            description: 'A daily morning meeting to start the day with focus and intention. Open discussion.',
-            dateTime: tomorrow, // Future meeting
-            link: 'https://zoom.us/j/123456789',
-            type: 'Open'
+        // 3 Basic Daily Recovery Meetings (Visible to all approved tipplers)
+        const basicMeetingMorning = await Meeting.create({
+            title: 'Morning Reflections & Hope',
+            groupName: 'Early Birds Fellowship',
+            description: 'Start your day with morning reflections, serenity readings, and open recovery sharing. Open to all fellowship members.',
+            dateTime: new Date(new Date().setHours(8, 0, 0, 0)),
+            link: 'https://meet.jit.si/erehab-morning-fellowship',
+            type: 'Open',
+            price: 0,
+            isBasic: true,
+            slot: 'morning'
         });
 
-        const meeting2 = await Meeting.create({
-            title: 'Steps 1-3 Study',
+        const basicMeetingNoon = await Meeting.create({
+            title: 'Midday Serenity & Step Study',
+            groupName: 'Noon Harmony Circle',
+            description: 'Midday check-in to manage cravings, refocus your day, and discuss practical recovery tools. Open to all fellowship members.',
+            dateTime: new Date(new Date().setHours(13, 0, 0, 0)),
+            link: 'https://meet.jit.si/erehab-midday-serenity',
+            type: 'Open',
+            price: 0,
+            isBasic: true,
+            slot: 'noon'
+        });
+
+        const basicMeetingEvening = await Meeting.create({
+            title: 'Evening Gratitude & Night Owls',
+            groupName: 'Sunset Sobriety Circle',
+            description: 'Evening wrap-up and gratitude session. Share your victories, challenges, and support one another before the night ends. Open to all fellowship members.',
+            dateTime: new Date(new Date().setHours(19, 30, 0, 0)),
+            link: 'https://meet.jit.si/erehab-evening-gratitude',
+            type: 'Open',
+            price: 0,
+            isBasic: true,
+            slot: 'evening'
+        });
+
+        // Custom / Special Meetings (Assigned specifically to users)
+        const customMeeting1 = await Meeting.create({
+            title: 'Steps 1-3 Deep Dive Workshop',
             groupName: 'Foundation Builders',
-            description: 'In-depth study of the first three steps. Closed meeting for those with a desire to stop drinking.',
+            description: 'In-depth study of the first three steps. Closed meeting for assigned members working closely on recovery steps.',
             dateTime: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
             link: 'https://zoom.us/j/987654321',
-            type: 'Closed'
+            type: 'Closed',
+            isBasic: false
         });
 
-        const pastMeeting = await Meeting.create({
-            title: 'Weekend Speaker Meeting',
-            groupName: 'Saturday Night Live',
-            description: 'Guest speaker sharing their experience, strength, and hope.',
-            dateTime: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+        const customMeeting2 = await Meeting.create({
+            title: 'Weekend Guest Speaker Panel',
+            groupName: 'Saturday Night Live Fellowship',
+            description: 'Special guest speaker sharing their experience, strength, and hope.',
+            dateTime: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000), // 4 days from now
             link: 'https://zoom.us/j/112233445',
-            type: 'Open'
+            type: 'Open',
+            isBasic: false
         });
 
-        // Assign users to meetings
-        await meeting1.addUsers([volunteer1, tippler1, tippler2]);
-        await meeting2.addUsers([volunteer2, tippler1]);
+        // Assign users to custom meetings
+        await customMeeting1.addUsers([volunteer2, tippler1]);
+        await customMeeting2.addUsers([volunteer1, tippler1, tippler2]);
 
         // 3. Seed Conventions
-        console.log('Seeding Conventions...');
+        console.log('Seeding Conventions (Kerala & India)...');
         const convStartDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
         const convEndDate = new Date(convStartDate.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days long
 
         const convention1 = await Convention.create({
             name: 'Annual Serenity Conference 2026',
-            location: 'Portland, Oregon',
+            location: 'Kochi, Kerala',
             startDate: convStartDate,
             endDate: convEndDate,
-            description: 'Join us for three days of fellowship, inspiring speakers, and workshops tailored to all stages of recovery.',
+            description: 'Join us for three days of fellowship, inspiring speakers, and workshops tailored to all stages of recovery along the serene backwaters of Kochi.',
             tariff: 150.00,
-            hotelName: 'Grand Portland Hotel',
-            hotelDetails: 'A beautiful hotel downtown. Amenities include a pool, fitness center, and complimentary breakfast.',
+            hotelName: 'Grand Hyatt Kochi Bolgatty',
+            hotelDetails: 'Luxury waterfront resort on Bolgatty Island, Kochi. Features serene backwater views, modern conference halls, wellness center, and Kerala traditional cuisine.',
             roomTariffs: '{"Single": 120, "Double AC": 180, "Non-AC": 100}',
             maxCapacity: 500,
             registeredCount: 3
@@ -146,13 +175,13 @@ const seedDatabase = async () => {
 
         const convention2 = await Convention.create({
             name: 'Spring Renewal Retreat 2026',
-            location: 'Sedona, Arizona',
+            location: 'Munnar, Kerala',
             startDate: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000),
             endDate: new Date(now.getTime() + 63 * 24 * 60 * 60 * 1000),
             description: 'A deeply restorative retreat in the heart of nature to help you connect with your inner peace and build long-lasting sobriety habits.',
             tariff: 250.00,
-            hotelName: 'Red Rock Wellness Resort',
-            hotelDetails: 'A secluded resort focusing on wellness. Includes yoga studio, organic meals, and spa access.',
+            hotelName: 'Tea County Hill Resort, Munnar',
+            hotelDetails: 'A peaceful hill station retreat nestled amidst misty tea gardens in Munnar. Includes meditation pavilion, Ayurvedic wellness center, and guided nature walks.',
             roomTariffs: '{"Single": 150, "Double": 220}',
             maxCapacity: 200,
             registeredCount: 0
@@ -160,13 +189,13 @@ const seedDatabase = async () => {
 
         const convention3 = await Convention.create({
             name: 'Steps to Freedom Workshop',
-            location: 'Austin, Texas',
+            location: 'Kovalam, Thiruvananthapuram',
             startDate: new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000),
             endDate: new Date(now.getTime() + 92 * 24 * 60 * 60 * 1000),
             description: 'Intensive weekend workshop diving into the 12 steps. Great for newcomers and veterans looking to refresh their foundation.',
             tariff: 100.00,
-            hotelName: 'Downtown Austin Inn',
-            hotelDetails: 'Conveniently located downtown with easy access to city attractions. Includes basic amenities.',
+            hotelName: 'Kovalam Beach Wellness Resort',
+            hotelDetails: 'Seaside resort located along Kovalam coastline. Amenities include air-conditioned conference facilities, beachside reflection spaces, and nutritious traditional dining.',
             roomTariffs: '{"Single": 110, "Double AC": 160}',
             maxCapacity: 300,
             registeredCount: 0
@@ -174,13 +203,13 @@ const seedDatabase = async () => {
 
         const convention4 = await Convention.create({
             name: 'Winter Fellowship Gathering',
-            location: 'Denver, Colorado',
+            location: 'Wayanad, Kerala',
             startDate: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000),
             endDate: new Date(now.getTime() + 183 * 24 * 60 * 60 * 1000),
-            description: 'Celebrate your recovery journey with a winter getaway. Includes keynote speakers, sober activities, and group discussions.',
+            description: 'Celebrate your recovery journey with a winter getaway amidst misty hills. Includes keynote speakers, sober activities, and group discussions.',
             tariff: 180.00,
-            hotelName: 'Snow Peak Lodge',
-            hotelDetails: 'Beautiful mountain lodge. Amenities include indoor heated pool, fireplace lounge, and guided hikes.',
+            hotelName: 'Vythiri Mist Eco-Resort, Wayanad',
+            hotelDetails: 'Scenic rainforest eco-resort in the Western Ghats. Amenities include conference hall, campfire fellowship lounge, and guided nature trails.',
             roomTariffs: '{"Single": 140, "Double AC": 200}',
             maxCapacity: 400,
             registeredCount: 0
@@ -219,7 +248,7 @@ const seedDatabase = async () => {
         await Payment.create({
             amount: 480.00,
             status: 'completed',
-            paymentMethod: 'PayPal',
+            paymentMethod: 'UPI / NetBanking',
             transactionId: 'TXN-1002',
             UserId: volunteer1.id,
             ConventionId: convention1.id
@@ -229,29 +258,142 @@ const seedDatabase = async () => {
         console.log('Seeding Assessments...');
 
         await Test.create({
-            title: 'Clinical AUDIT-Style Assessment',
-            description: 'A clinically inspired 10-question assessment to evaluate your drinking habits and associated risks.',
-            criteria: 'Answer all 10 questions honestly to receive a clinically inspired risk evaluation.',
+            title: 'Clinical Substance Use Risk Assessment',
+            description: 'A clinically inspired 10-question assessment to evaluate substance use patterns and associated risks.',
+            criteria: 'Answer all 10 questions honestly to receive a clinically inspired substance-use risk evaluation.',
             questions: JSON.stringify([
-                { id: 1, text: "How often do you drink alcohol?", type: "single-choice", options: [{ text: "Never", score: 0 }, { text: "Monthly or less", score: 1 }, { text: "2–4 times a month", score: 2 }, { text: "2–3 times a week", score: 3 }, { text: "4+ times a week", score: 4 }] },
-                { id: 2, text: "How many drinks do you have on a typical day?", type: "single-choice", options: [{ text: "1–2", score: 0 }, { text: "3–4", score: 1 }, { text: "5–6", score: 2 }, { text: "7–9", score: 3 }, { text: "10+", score: 4 }] },
-                { id: 3, text: "How often do you drink more than 6 drinks on one occasion?", type: "single-choice", options: [{ text: "Never", score: 0 }, { text: "Less than monthly", score: 1 }, { text: "Monthly", score: 2 }, { text: "Weekly", score: 3 }, { text: "Daily or almost daily", score: 4 }] },
-                { id: 4, text: "How often do you feel unable to stop drinking once you start?", type: "single-choice", options: [{ text: "Never", score: 0 }, { text: "Rarely", score: 1 }, { text: "Sometimes", score: 2 }, { text: "Often", score: 3 }, { text: "Always", score: 4 }] },
-                { id: 5, text: "How often has drinking affected your responsibilities (work/home)?", type: "single-choice", options: [{ text: "Never", score: 0 }, { text: "Rarely", score: 1 }, { text: "Sometimes", score: 2 }, { text: "Often", score: 3 }, { text: "Always", score: 4 }] },
-                { id: 6, text: "How often do you need a drink in the morning (eye-opener)?", type: "single-choice", options: [{ text: "Never", score: 0 }, { text: "Rarely", score: 1 }, { text: "Sometimes", score: 2 }, { text: "Often", score: 3 }, { text: "Always", score: 4 }] },
-                { id: 7, text: "How often do you feel guilty after drinking?", type: "single-choice", options: [{ text: "Never", score: 0 }, { text: "Rarely", score: 1 }, { text: "Sometimes", score: 2 }, { text: "Often", score: 3 }, { text: "Always", score: 4 }] },
-                { id: 8, text: "Have you experienced memory loss after drinking?", type: "single-choice", options: [{ text: "Never", score: 0 }, { text: "Rarely", score: 1 }, { text: "Sometimes", score: 2 }, { text: "Often", score: 3 }, { text: "Always", score: 4 }] },
-                { id: 9, text: "Have others suggested you reduce your drinking?", type: "single-choice", options: [{ text: "No", score: 0 }, { text: "Once", score: 1 }, { text: "Occasionally", score: 2 }, { text: "Frequently", score: 3 }, { text: "Very often", score: 4 }] },
-                { id: 10, text: "Have you had health or emotional issues due to drinking?", type: "single-choice", options: [{ text: "No", score: 0 }, { text: "Minor", score: 1 }, { text: "Moderate", score: 2 }, { text: "Serious", score: 3 }, { text: "Severe", score: 4 }] }
+                {
+                    id: 1,
+                    text: "Which substance do you use most often or are you currently seeking help for?",
+                    type: "single-choice",
+                    options: [
+                        { text: "Alcohol", score: 0 },
+                        { text: "Cigarettes / Tobacco / Nicotine", score: 0 },
+                        { text: "Cannabis / Marijuana", score: 0 },
+                        { text: "Opioids / Painkillers", score: 0 },
+                        { text: "Stimulants (Cocaine / Amphetamines)", score: 0 },
+                        { text: "Sedatives / Sleeping Pills", score: 0 },
+                        { text: "Inhalants / Other Chemical Drugs", score: 0 },
+                        { text: "Other Substance", score: 0 }
+                    ]
+                },
+                {
+                    id: 2,
+                    text: "How often do you use the selected substance?",
+                    type: "single-choice",
+                    options: [
+                        { text: "Never / Not currently", score: 0 },
+                        { text: "Less than monthly", score: 1 },
+                        { text: "Monthly", score: 2 },
+                        { text: "Weekly", score: 3 },
+                        { text: "Daily or almost daily", score: 4 }
+                    ]
+                },
+                {
+                    id: 3,
+                    text: "How much or how intensely do you typically use the selected substance?",
+                    type: "single-choice",
+                    options: [
+                        { text: "Very little / Low use", score: 0 },
+                        { text: "Low", score: 1 },
+                        { text: "Moderate", score: 2 },
+                        { text: "High", score: 3 },
+                        { text: "Very high / Heavy use", score: 4 }
+                    ]
+                },
+                {
+                    id: 4,
+                    text: "How often do you feel unable to stop using the substance once you start?",
+                    type: "single-choice",
+                    options: [
+                        { text: "Never", score: 0 },
+                        { text: "Rarely", score: 1 },
+                        { text: "Sometimes", score: 2 },
+                        { text: "Often", score: 3 },
+                        { text: "Always", score: 4 }
+                    ]
+                },
+                {
+                    id: 5,
+                    text: "How often do you experience a strong craving or urge to use the substance?",
+                    type: "single-choice",
+                    options: [
+                        { text: "Never", score: 0 },
+                        { text: "Rarely", score: 1 },
+                        { text: "Sometimes", score: 2 },
+                        { text: "Often", score: 3 },
+                        { text: "Always", score: 4 }
+                    ]
+                },
+                {
+                    id: 6,
+                    text: "How often do you experience withdrawal symptoms or feel that you need the substance to feel normal?",
+                    type: "single-choice",
+                    options: [
+                        { text: "Never", score: 0 },
+                        { text: "Rarely", score: 1 },
+                        { text: "Sometimes", score: 2 },
+                        { text: "Often", score: 3 },
+                        { text: "Always", score: 4 }
+                    ]
+                },
+                {
+                    id: 7,
+                    text: "How often has substance use affected your responsibilities, work, studies, or relationships?",
+                    type: "single-choice",
+                    options: [
+                        { text: "Never", score: 0 },
+                        { text: "Rarely", score: 1 },
+                        { text: "Sometimes", score: 2 },
+                        { text: "Often", score: 3 },
+                        { text: "Always", score: 4 }
+                    ]
+                },
+                {
+                    id: 8,
+                    text: "How often have you used the substance in situations that could put your health or safety at risk?",
+                    type: "single-choice",
+                    options: [
+                        { text: "Never", score: 0 },
+                        { text: "Rarely", score: 1 },
+                        { text: "Sometimes", score: 2 },
+                        { text: "Often", score: 3 },
+                        { text: "Always", score: 4 }
+                    ]
+                },
+                {
+                    id: 9,
+                    text: "Have you experienced physical, health, or emotional problems because of substance use?",
+                    type: "single-choice",
+                    options: [
+                        { text: "No", score: 0 },
+                        { text: "Minor", score: 1 },
+                        { text: "Moderate", score: 2 },
+                        { text: "Serious", score: 3 },
+                        { text: "Severe", score: 4 }
+                    ]
+                },
+                {
+                    id: 10,
+                    text: "Have you tried to reduce or stop using the substance but found it difficult to do so?",
+                    type: "single-choice",
+                    options: [
+                        { text: "No", score: 0 },
+                        { text: "Once", score: 1 },
+                        { text: "Occasionally", score: 2 },
+                        { text: "Frequently", score: 3 },
+                        { text: "Very often / Unable to stop", score: 4 }
+                    ]
+                }
             ]),
             scoringLogic: JSON.stringify({
-                calculation: "total / 4",
+                calculation: "total / 3.6",
                 thresholds: [
                     { maxScore: 2, message: "Low Risk" },
                     { maxScore: 4, message: "Mild Risk" },
                     { maxScore: 6, message: "Moderate Risk" },
                     { maxScore: 8, message: "High Risk" },
-                    { maxScore: 10, message: "Severe Addiction (Immediate Attention Required)" }
+                    { maxScore: 10, message: "Severe Risk (Immediate Professional Attention Recommended)" }
                 ]
             })
         });

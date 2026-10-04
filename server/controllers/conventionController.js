@@ -3,6 +3,9 @@ import { Convention, ConventionRegistration, User } from '../models/index.js';
 export const createConvention = async (req, res) => {
     try {
         const { name, location, startDate, endDate, description, tariff, hotelName, roomTariffs, maxCapacity } = req.body;
+        const isVolunteer = req.user && req.user.role === 'volunteer';
+        const isApproved = !isVolunteer; // Admin creations are auto-approved; volunteer creations require approval!
+        const status = isApproved ? 'approved' : 'pending';
 
         const convention = await Convention.create({
             name,
@@ -10,10 +13,13 @@ export const createConvention = async (req, res) => {
             startDate,
             endDate,
             description,
-            tariff,
+            tariff: tariff || 0,
             hotelName,
             roomTariffs,
-            maxCapacity: maxCapacity || 100
+            maxCapacity: maxCapacity || 100,
+            isApproved,
+            status,
+            createdBy: req.user ? req.user.id : null
         });
 
         res.status(201).json(convention);
@@ -24,8 +30,41 @@ export const createConvention = async (req, res) => {
 
 export const getConventions = async (req, res) => {
     try {
-        const conventions = await Convention.findAll();
+        let whereClause = {};
+        // If user is a tippler or not logged in, only return approved conventions
+        if (!req.user || req.user.role === 'tippler') {
+            whereClause = { isApproved: true };
+        }
+        const conventions = await Convention.findAll({ where: whereClause });
         res.json(conventions);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+export const approveConvention = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const convention = await Convention.findByPk(id);
+        if (!convention) {
+            return res.status(404).json({ message: 'Convention not found' });
+        }
+        await convention.update({ isApproved: true, status: 'approved' });
+        res.json({ message: 'Convention approved successfully', convention });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+export const rejectConvention = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const convention = await Convention.findByPk(id);
+        if (!convention) {
+            return res.status(404).json({ message: 'Convention not found' });
+        }
+        await convention.destroy();
+        res.json({ message: 'Convention rejected and removed successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

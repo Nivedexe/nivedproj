@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../../components/Navbar';
+import { AuthContext } from '../../context/AuthContext';
 
 const AdminConventionForm = () => {
+    const { user } = useContext(AuthContext);
     const { id } = useParams();
     const navigate = useNavigate();
     const isEditMode = !!id;
@@ -88,7 +90,13 @@ const AdminConventionForm = () => {
             } else {
                 await axios.post('http://localhost:5000/api/conventions', payload, config);
             }
-            navigate('/admin');
+            
+            if (user?.role === 'volunteer') {
+                alert(isEditMode ? 'Convention updated successfully!' : 'Convention submitted! Waiting for administrator approval.');
+                navigate('/volunteer-dashboard');
+            } else {
+                navigate('/admin');
+            }
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to save convention');
         }
@@ -99,6 +107,20 @@ const AdminConventionForm = () => {
             <Navbar />
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">{isEditMode ? 'Edit Convention' : 'Create Convention'}</h1>
+
+                {user?.role === 'volunteer' && (
+                    <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r shadow-sm">
+                        <div className="flex">
+                            <div className="flex-shrink-0 text-xl">⏳</div>
+                            <div className="ml-3">
+                                <h3 className="text-sm font-bold text-amber-900">Volunteer Moderation Notice</h3>
+                                <p className="text-sm text-amber-700 mt-1">
+                                    Conventions created by volunteers are submitted to the Administrator for approval. The convention will show as "Waiting for Approval" on your dashboard and will not be displayed to Tipplers until approved.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">{error}</div>}
 
@@ -237,7 +259,7 @@ const AdminConventionForm = () => {
                         </button>
                         <button
                             type="button"
-                            onClick={() => navigate('/admin')}
+                            onClick={() => navigate(user?.role === 'volunteer' ? '/volunteer-dashboard' : '/admin')}
                             className="inline-block align-baseline font-bold text-sm text-primary hover:text-indigo-800"
                         >
                             Cancel

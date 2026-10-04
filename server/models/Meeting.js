@@ -28,6 +28,14 @@ const Meeting = db.define('Meeting', {
     price: {
         type: DataTypes.DECIMAL(10, 2),
         defaultValue: 0.00
+    },
+    isBasic: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    slot: {
+        type: DataTypes.STRING, // 'morning', 'noon', 'evening'
+        allowNull: true
     }
 });
 

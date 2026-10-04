@@ -52,6 +52,14 @@ const Test = db.define('Test', {
                 : value;
             this.setDataValue('scoringLogic', stringValue);
         }
+    },
+    hasPendingReview: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    pendingChanges: {
+        type: DataTypes.TEXT,
+        allowNull: true
     }
 });
 

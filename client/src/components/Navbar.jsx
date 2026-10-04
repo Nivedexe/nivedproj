@@ -24,16 +24,25 @@ const Navbar = () => {
           <div className="hidden md:flex space-x-8 items-center">
             {user && (
               <>
-                <Link to="/meetings" className="text-gray-600 hover:text-primary transition-colors">Meetings</Link>
-                <Link to="/conventions" className="text-gray-600 hover:text-primary transition-colors">Conventions</Link>
-                <Link to="/assessments" className="text-gray-600 hover:text-primary transition-colors">Self-Assessment</Link>
+                {/* Meetings and Conventions: Only for Admin, approved Volunteers, and approved Tipplers */}
+                {(user.role === 'admin' || user.isApproved) && (
+                  <>
+                    <Link to="/meetings" className="text-gray-600 hover:text-primary transition-colors">Meetings</Link>
+                    <Link to="/conventions" className="text-gray-600 hover:text-primary transition-colors">Conventions</Link>
+                  </>
+                )}
+                {user.role === 'tippler' && (
+                  <Link to="/assessments" className="text-gray-600 hover:text-primary transition-colors font-medium">Self-Assessment</Link>
+                )}
                 {user.role === 'admin' && (
                   <Link to="/admin" className="text-gray-600 hover:text-primary transition-colors font-medium">Admin Dashboard</Link>
                 )}
                 {user.role === 'volunteer' && (
-                  <Link to="/volunteer-dashboard" className="text-gray-600 hover:text-primary transition-colors font-medium">Volunteer Dashboard</Link>
+                  <Link to="/volunteer-dashboard" className="text-gray-600 hover:text-primary transition-colors font-medium">
+                    Volunteer Dashboard
+                  </Link>
                 )}
-                {user.role === 'tippler' && (
+                {user.role === 'tippler' && user.isApproved && (
                   <Link to="/dashboard" className="text-gray-600 hover:text-primary transition-colors font-medium">Dashboard</Link>
                 )}
               </>

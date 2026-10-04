@@ -14,7 +14,8 @@ export const createMeeting = async (req, res) => {
         });
 
         if (assignedUserIds && assignedUserIds.length > 0) {
-            await meeting.setUsers(assignedUserIds);
+            const numericIds = assignedUserIds.map(uid => parseInt(uid, 10)).filter(uid => !isNaN(uid));
+            await meeting.setUsers(numericIds);
         }
 
         res.status(201).json(meeting);
@@ -28,13 +29,32 @@ export const getMeetings = async (req, res) => {
         const { role, id } = req.user;
         let meetings;
 
-        if (role === 'admin') {
-            meetings = await Meeting.findAll({ include: User });
+        if (role === 'admin' || role === 'volunteer') {
+            meetings = await Meeting.findAll({ 
+                include: User,
+                order: [['isBasic', 'DESC'], ['dateTime', 'ASC']]
+            });
+        } else if (role === 'tippler') {
+            // Tipplers see:
+            // 1. All 3 basic daily fellowship meetings (isBasic === true)
+            // 2. AND custom meetings specifically assigned to them
+            const allMeetings = await Meeting.findAll({
+                include: [{
+                    model: User,
+                    attributes: ['id', 'username'],
+                    through: { attributes: [] }
+                }],
+                order: [['isBasic', 'DESC'], ['dateTime', 'ASC']]
+            });
+
+            meetings = allMeetings.filter(m => {
+                if (m.isBasic) return true;
+                return m.Users && m.Users.some(u => u.id === id);
+            });
         } else {
-            // For now, return all meetings for users to see paid ones too, or filter?
-            // User requested "paid meetings where user needs to pay".
-            // Let's return all meetings so they can see them.
-            meetings = await Meeting.findAll();
+            meetings = await Meeting.findAll({
+                order: [['isBasic', 'DESC'], ['dateTime', 'ASC']]
+            });
         }
 
         res.json(meetings);
@@ -71,7 +91,10 @@ export const updateMeeting = async (req, res) => {
         await meeting.update({ title, description, dateTime, link, type, price });
 
         if (assignedUserIds) {
-            await meeting.setUsers(assignedUserIds);
+            const numericIds = Array.isArray(assignedUserIds)
+                ? assignedUserIds.map(uid => parseInt(uid, 10)).filter(uid => !isNaN(uid))
+                : [];
+            await meeting.setUsers(numericIds);
         }
 
         res.json(meeting);
