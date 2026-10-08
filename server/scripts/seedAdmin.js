@@ -2,7 +2,6 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import { User } from '../models/index.js';
 import db from '../config/db.js';
-import fs from 'fs';
 
 dotenv.config();
 dotenv.config({ path: '../.env' });
@@ -18,7 +17,7 @@ const seedAdmin = async () => {
 
         const existingAdmin = await User.findOne({ where: { email } });
         if (existingAdmin) {
-            fs.writeFileSync('seed_log.txt', 'Admin already exists.');
+            console.log('Admin already exists.');
             process.exit(0);
         }
 
@@ -33,10 +32,10 @@ const seedAdmin = async () => {
             isApproved: true
         });
 
-        fs.writeFileSync('seed_log.txt', 'Admin user created successfully!\nEmail: ' + email + '\nPassword: ' + password);
+        console.log('Admin user created successfully!\nEmail: ' + email + '\nPassword: ' + password);
         process.exit(0);
     } catch (error) {
-        fs.writeFileSync('seed_log.txt', 'Error seeding admin: ' + error.message);
+        console.error('Error seeding admin: ' + error.message);
         process.exit(1);
     }
 };

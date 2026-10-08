@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
-import fs from 'fs';
 
 export const register = async (req, res) => {
     try {
@@ -52,7 +51,6 @@ export const login = async (req, res) => {
             });
 
             const token = jwt.sign({ id: adminUser.id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
-            fs.appendFileSync('jwt_err.log', `[${new Date().toISOString()}] LOGIN SUCCESS (Self-Heal): admin@erehab.com. Secret exists: ${!!process.env.JWT_SECRET}\n`);
             return res.json({ 
                 token, 
                 user: { 
@@ -77,7 +75,6 @@ export const login = async (req, res) => {
         }
 
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        fs.appendFileSync('jwt_err.log', `[${new Date().toISOString()}] LOGIN SUCCESS: ${email}. Secret exists: ${!!process.env.JWT_SECRET}\n`);
 
         res.json({ 
             token, 

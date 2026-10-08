@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken';
-import fs from 'fs';
 
 export const protect = (req, res, next) => {
     let token = req.header('Authorization');
@@ -14,14 +13,14 @@ export const protect = (req, res, next) => {
 
     try {
         if (!process.env.JWT_SECRET) {
-            fs.appendFileSync('jwt_err.log', `[${new Date().toISOString()}] ERROR: JWT_SECRET is not defined\n`);
+            console.error('ERROR: JWT_SECRET is not defined in environment variables');
             return res.status(500).json({ message: 'Server configuration error' });
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
     } catch (error) {
-        fs.appendFileSync('jwt_err.log', `[${new Date().toISOString()}] VERIFY ERROR: ${error.message} (Secret exists: ${!!process.env.JWT_SECRET}) (Token length: ${token?.length})\n`);
+        console.error(`JWT Verification Error: ${error.message}`);
         res.status(401).json({ message: 'Token is not valid' });
     }
 };
