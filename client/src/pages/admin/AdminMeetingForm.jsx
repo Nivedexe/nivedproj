@@ -62,7 +62,13 @@ const AdminMeetingForm = () => {
     }, [isEditMode, id]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData({ ...formData, [e.target.name]: e.target.value, date: getTwodaysFromNow() });
+    };
+
+    const getTwodaysFromNow = () => {
+        const date = new Date();
+        date.setDate(date.getDate() + 2);
+        return date.toISOString().slice(0, 16);
     };
 
     const toggleUserSelection = (userId) => {
@@ -74,8 +80,8 @@ const AdminMeetingForm = () => {
     };
 
     const handleSelectAll = () => {
-        const filtered = users.filter(u => 
-            u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        const filtered = users.filter(u =>
+            u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
             u.email.toLowerCase().includes(searchQuery.toLowerCase())
         );
         const filteredIds = filtered.map(u => u.id.toString());
@@ -126,8 +132,8 @@ const AdminMeetingForm = () => {
         }
     };
 
-    const filteredUsers = users.filter(u => 
-        u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const filteredUsers = users.filter(u =>
+        u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -190,6 +196,7 @@ const AdminMeetingForm = () => {
                                 required
                                 value={formData.dateTime}
                                 onChange={handleChange}
+                                min={getTwodaysFromNow()}
                             />
                         </div>
                         <div>
@@ -331,9 +338,8 @@ const AdminMeetingForm = () => {
                                                 return (
                                                     <div
                                                         key={u.id}
-                                                        className={`cursor-pointer select-none py-2.5 px-3 hover:bg-indigo-50 flex items-center justify-between transition-colors ${
-                                                            isSelected ? 'bg-indigo-50/70 border-l-4 border-indigo-600' : ''
-                                                        }`}
+                                                        className={`cursor-pointer select-none py-2.5 px-3 hover:bg-indigo-50 flex items-center justify-between transition-colors ${isSelected ? 'bg-indigo-50/70 border-l-4 border-indigo-600' : ''
+                                                            }`}
                                                         onClick={() => toggleUserSelection(u.id.toString())}
                                                     >
                                                         <div className="flex items-center space-x-3">
@@ -341,7 +347,7 @@ const AdminMeetingForm = () => {
                                                                 type="checkbox"
                                                                 className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer"
                                                                 checked={isSelected}
-                                                                onChange={() => {}} // handled by parent div onClick
+                                                                onChange={() => { }} // handled by parent div onClick
                                                             />
                                                             <div className="h-7 w-7 rounded-full bg-indigo-100 text-primary font-bold text-xs flex items-center justify-center flex-shrink-0">
                                                                 {u.username?.[0]?.toUpperCase() || 'T'}
